@@ -37,7 +37,7 @@ jobs:
   Continuous-Deployment:
     needs: Continuous-Integration
     runs-on: ubuntu-22.04
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'pull_request' && github.base_ref == 'main')
     steps:
       - name: Dummy Deploy Step
         run: |
