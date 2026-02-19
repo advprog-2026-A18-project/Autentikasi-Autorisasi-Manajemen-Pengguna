@@ -30,6 +30,6 @@ public class AuthController {
 
     @GetMapping("/ping")
     public String ping(){
-        return "Auth is running";
+        return "Auth is starting";
     }
 }
