@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: ["main", "staging"]
+  pull_request:
+    branches: ["main", "staging"]
+jobs:
+
+  Continuous-Integration:
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Check out the Git repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Run SonarCloud Analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew build sonar --info
+
+  Continuous-Deployment:
+    needs: Continuous-Integration
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+    steps:
+      - name: Dummy Deploy Step
+        run: |
+          echo "Starting deployment..."
+          echo "Contacting to PaaS..."
+          echo "Info: Platform as a Service is unavailable."
+          echo "[DUMMY] Application succeed to be deployed!"
