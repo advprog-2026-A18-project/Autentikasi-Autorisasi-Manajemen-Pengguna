@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.sonarqube") version "4.4.1.3373"
 }
 
 group = "my_sawit"
@@ -11,6 +12,14 @@ description = "authentication_manajemen_akun"
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "advprog-2026-A18-project_Autentikasi-Autorisasi-Manajemen-Pengguna")
+        property("sonar.organization", "advprog-2026-a18-project")
+        property("sonar.host.url", "https://sonarcloud.io")
     }
 }
 
