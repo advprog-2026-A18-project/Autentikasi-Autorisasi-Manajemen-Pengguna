@@ -24,4 +24,8 @@ public class AuthService {
 
     }
 
+    public List<User> fetchAllUsers(){
+        return userRepo.findAll();
+    }
+
 }
