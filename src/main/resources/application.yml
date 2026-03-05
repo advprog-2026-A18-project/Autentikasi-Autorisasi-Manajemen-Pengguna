@@ -10,3 +10,10 @@ spring:
     active: local
   config:
     import: optional:file:.env[.properties]
+
+app:
+  admin:
+    username: ${ADMIN_USERNAME}
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+    fullname: ${ADMIN_FULLNAME}
