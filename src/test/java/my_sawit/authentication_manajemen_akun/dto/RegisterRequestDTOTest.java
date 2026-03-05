@@ -1,5 +1,6 @@
 package my_sawit.authentication_manajemen_akun.dto;
 
+import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
