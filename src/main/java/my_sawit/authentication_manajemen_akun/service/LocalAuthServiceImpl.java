@@ -40,6 +40,10 @@ public class LocalAuthServiceImpl implements AuthStrategy {
             return new ApiResponse<>(400, "Email is already registered", null);
         }
 
+        if ("ADMIN".equalsIgnoreCase(request.getRole())) {
+            return new ApiResponse<>(403, "Registration as ADMIN is not allowed", null);
+        }
+
         Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Role tidak valid: " + request.getRole()));
 
