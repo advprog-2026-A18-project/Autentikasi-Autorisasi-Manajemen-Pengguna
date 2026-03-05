@@ -39,6 +39,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")
