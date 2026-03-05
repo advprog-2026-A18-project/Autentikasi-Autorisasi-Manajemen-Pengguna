@@ -1,6 +1,10 @@
 server:
   port: 8081
 
+jwt:
+  secret: "PasswordRahasiaMySawitYangVeryVeryPanjangSekaliBiarAman123!@#"
+  expirationMs: 86400000
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/mysawit_auth
