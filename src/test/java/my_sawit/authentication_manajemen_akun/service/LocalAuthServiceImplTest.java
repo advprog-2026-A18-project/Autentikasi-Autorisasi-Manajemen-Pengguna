@@ -11,8 +11,10 @@ import my_sawit.authentication_manajemen_akun.repository.UserRepository;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -23,7 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-class LocalAuthServiceTest {
+@ExtendWith(MockitoExtension.class)
+class LocalAuthServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
@@ -50,7 +53,7 @@ class LocalAuthServiceTest {
     @BeforeEach
     void setUp(){
         validBuruhRequest = RegisterRequestDTO.builder()
-                .username("budi")
+                .username("budi_sawit")
                 .fullname("Budi S")
                 .email("budi@sawit.com")
                 .password("Password123!")
@@ -84,7 +87,7 @@ class LocalAuthServiceTest {
 
         assertNotNull(response);
         assertEquals(201, response.getStatusCode());
-        assertEquals("Registrasi berhasil, Anda telah otomatis login", response.getMessage());
+        assertEquals("Registration succeed, You are authenticated", response.getMessage());
 
         assertNotNull(response.getData());
         assertEquals("dummy-jwt-token-12345", response.getData().getAccessToken());
@@ -105,7 +108,7 @@ class LocalAuthServiceTest {
         ApiResponse<AuthResponseDTO> response = localAuthService.register(validBuruhRequest);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals("Email sudah terdaftar", response.getMessage());
+        assertEquals("Email is already registered", response.getMessage());
         assertNull(response.getData());
 
         verify(userRepository, never()).save(any(User.class));
