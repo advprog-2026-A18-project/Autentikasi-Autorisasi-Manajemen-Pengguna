@@ -1,22 +1,24 @@
 package my_sawit.authentication_manajemen_akun.dto;
 
-import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequest;
+import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RegisterRequestTest {
+class RegisterRequestDTOTest {
 
     @Test
     void testGetterAndSetter() {
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Budi");
+        RegisterRequestDTO request = new RegisterRequestDTO();
+        request.setUsername("Budi");
+        request.setFullname("Budi S");
         request.setEmail("budi@gmail.com");
         request.setPassword("tes");
-        request.setRole("Pekerja");
+        request.setRole("BURUH");
 
-        assertEquals("Budi", request.getName());
+        assertEquals("Budi", request.getUsername());
+        assertEquals("Budi S", request.getFullname());
         assertEquals("budi@gmail.com", request.getEmail());
         assertEquals("tes", request.getPassword());
-        assertEquals("Pekerja", request.getRole());
+        assertEquals("BURUH", request.getRole());
     }
 }
