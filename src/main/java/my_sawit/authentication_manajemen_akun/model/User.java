@@ -37,6 +37,7 @@ public class User {
 
     // membedakan user yang regist via manual n login; LOCAL --> manual, GOOGLE --> oauth
     @Column(name = "auth_provider", nullable = false)
+    @Builder.Default
     private String authProvider = "LOCAL";
 
     @ManyToOne(fetch = FetchType.LAZY)
