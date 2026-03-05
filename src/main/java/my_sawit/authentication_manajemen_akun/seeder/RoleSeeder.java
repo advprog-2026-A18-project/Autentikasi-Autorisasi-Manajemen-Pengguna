@@ -5,6 +5,7 @@ import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.RoleRepository;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,18 @@ public class RoleSeeder implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.admin.username}")
+    private String adminUsername;
+
+    @Value("${app.admin.email}")
+    private String adminEmail;
+
+    @Value("${app.admin.password}")
+    private String adminPassword;
+
+    @Value("${app.admin.fullname}")
+    private String adminFullname;
 
     @Override
     public void run(String... args) throws Exception {
@@ -33,8 +46,6 @@ public class RoleSeeder implements CommandLineRunner {
         }
 
         // SEEDNING akun ADMIN
-        String adminEmail = "admin@mysawit.com";
-        String adminUsername = "admin_utama";
 
         if (!userRepository.existsByEmail(adminEmail)) {
 
@@ -44,9 +55,9 @@ public class RoleSeeder implements CommandLineRunner {
             // Buat akunnya
             User superAdmin = User.builder()
                     .username(adminUsername)
-                    .fullname("Super Administrator")
+                    .fullname(adminFullname)
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("AdminRahasia123!"))
+                    .password(passwordEncoder.encode(adminPassword))
                     .role(adminRole)
                     .authProvider("LOCAL")
                     .build();
