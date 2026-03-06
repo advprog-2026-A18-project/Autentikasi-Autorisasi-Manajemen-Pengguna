@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.seeder;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.RoleRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RoleSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
@@ -41,7 +43,7 @@ public class RoleSeeder implements CommandLineRunner {
                         .build();
                 roleRepository.save(newRole);
 
-                System.out.println("Seeder: Role '" + roleName + "' berhasil ditambahkan ke database.");
+                log.info("Seeder: Role '{}' berhasil ditambahkan ke database.", roleName);
             }
         }
 
@@ -63,7 +65,7 @@ public class RoleSeeder implements CommandLineRunner {
                     .build();
 
             userRepository.save(superAdmin);
-            System.out.println("Seeder: Akun Admin Utama berhasil dibuat! (Email: " + adminEmail + ")");
+            log.info("Seeder: Akun Admin Utama berhasil dibuat! (Email: {})", adminEmail);
         }
 
     }
