@@ -143,7 +143,7 @@ class LocalAuthServiceImplTest {
     }
 
     @Test
-    void register_WhenRoleMandorAndNomorSertifikasiBlank_ShouldThrowException() {
+    void register_WhenRoleMandorAndNomorSertifikasiBlank_ShouldReturn400() {
         registerReq.setRole("MANDOR");
         registerReq.setNomorSertifikasi("");
         mockRole.setName("MANDOR");
@@ -152,8 +152,11 @@ class LocalAuthServiceImplTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByName("MANDOR")).thenReturn(Optional.of(mockRole));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.register(registerReq));
-        assertEquals("Mandor must fill Nomor Sertifikasi", exception.getMessage());
+        ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
+
+        assertEquals(400, response.getStatusCode());
+        assertEquals("Mandor must fill Nomor Sertifikasi", response.getMessage());
+        assertNull(response.getData());
     }
 
     @Test
