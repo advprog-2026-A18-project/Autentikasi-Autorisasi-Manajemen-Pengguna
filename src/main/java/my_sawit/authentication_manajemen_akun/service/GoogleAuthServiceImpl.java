@@ -134,6 +134,7 @@ public class GoogleAuthServiceImpl {
         }
     }
 
+    @lombok.Generated
     protected GoogleIdToken verifyGoogleToken(String idTokenString) throws GeneralSecurityException, IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 .setAudience(Collections.singletonList(googleClientId))
