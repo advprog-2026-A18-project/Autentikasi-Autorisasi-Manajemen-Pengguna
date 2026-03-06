@@ -22,7 +22,7 @@ sonar {
         property("sonar.projectKey", "advprog-2026-A18-project_Autentikasi-Autorisasi-Manajemen-Pengguna")
         property("sonar.organization", "advprog-2026-a18-project")
         property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.coverage.exclusions", "**/seeder/**, **/exception/**, **/*Application.java, **/security/SecurityConfig.java, **/security/JwtAuthenticationFilter.java, **/dto/**, **/model/**"
+        property("sonar.coverage.exclusions", "**/seeder/**, **/exception/**, **/*Application.java, **/security/SecurityConfig.java, **/security/JwtAuthenticationFilter.java, **/dto/**, **/model/**")
     }
 }
 
