@@ -2,6 +2,7 @@ package my_sawit.authentication_manajemen_akun.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -22,6 +23,13 @@ public class AuthController {
         ApiResponse<AuthResponseDTO> response = authStrategy.register(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
+
+        ApiResponse<AuthResponseDTO> response = authStrategy.login(request);
+        return ResponseEntity.ok(response);
     }
 
 }

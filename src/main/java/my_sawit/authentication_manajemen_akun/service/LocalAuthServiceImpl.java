@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -15,6 +16,8 @@ import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +93,51 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 .user(profileDTO)
                 .build();
         return new ApiResponse<>(201, "Registration succeed, You are authenticated", authData);
+
+    }
+
+    @Override
+    public ApiResponse<AuthResponseDTO> login (LoginRequestDTO request){
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        if (userOptional.isEmpty()) {
+            return new ApiResponse<>(401, "Incorrect email or password", null);
+        }
+
+        User user = userOptional.get();
+        if(user.getPassword() == null){
+            return new ApiResponse<>(400, "Please check whether you logged in with Google Auth", null);
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return new ApiResponse<>(401, "Incorrect email or password", null);
+        }
+
+        String nomorSertifikasi = null;
+
+        if ("MANDOR".equalsIgnoreCase(user.getRole().getName())) {
+            Optional<MandorProfile> mandorProfileOpt = mandorProfileRepository.findByUser(user);
+
+            if (mandorProfileOpt.isPresent()) {
+                nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
+            }
+        }
+
+        UserResponseDTO profileDTO = UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .nomorSertifikasi(nomorSertifikasi)
+                .build();
+
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+        AuthResponseDTO authData = AuthResponseDTO.builder()
+                .accessToken(token)
+                .user(profileDTO)
+                .build();
+
+        return new ApiResponse<>(200, "Login succeed! You are authenticated", authData);
 
     }
 
