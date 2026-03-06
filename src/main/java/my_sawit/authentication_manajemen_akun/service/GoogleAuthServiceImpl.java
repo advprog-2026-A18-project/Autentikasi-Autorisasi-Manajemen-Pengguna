@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 @Service
 @RequiredArgsConstructor
@@ -132,7 +134,7 @@ public class GoogleAuthServiceImpl {
         }
     }
 
-    protected GoogleIdToken verifyGoogleToken(String idTokenString) throws Exception {
+    protected GoogleIdToken verifyGoogleToken(String idTokenString) throws GeneralSecurityException, IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 .setAudience(Collections.singletonList(googleClientId))
                 .build();

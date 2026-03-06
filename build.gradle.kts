@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.sonarqube") version "7.2.0.6526"
+    jacoco
 
 }
 
@@ -21,6 +22,7 @@ sonar {
         property("sonar.projectKey", "advprog-2026-A18-project_Autentikasi-Autorisasi-Manajemen-Pengguna")
         property("sonar.organization", "advprog-2026-a18-project")
         property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.coverage.exclusions", "**/seeder/**, **/exception/**, **/*Application.java, **/security/SecurityConfig.java, **/security/JwtAuthenticationFilter.java, **/dto/**, **/model/**"
     }
 }
 
@@ -55,6 +57,22 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 }
 
-tasks.withType<Test> {
+tasks.test {
+    filter{
+        excludeTestsMatching("*FunctionalTest")
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
