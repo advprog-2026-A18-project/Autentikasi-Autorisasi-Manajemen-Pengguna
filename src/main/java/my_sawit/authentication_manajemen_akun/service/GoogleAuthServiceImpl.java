@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -25,9 +26,13 @@ import java.util.Optional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthServiceImpl {
+
+    private static final String ROLE_MANDOR = "MANDOR";
+    private static final String ROLE_ADMIN = "ADMIN";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -38,100 +43,110 @@ public class GoogleAuthServiceImpl {
     private String googleClientId;
 
     @Transactional
-    public ApiResponse<AuthResponseDTO> authenticate(GoogleAuthRequestDTO request){
-        try{
-
+    public ApiResponse<AuthResponseDTO> authenticate(GoogleAuthRequestDTO request) {
+        try {
             GoogleIdToken idToken = verifyGoogleToken(request.getIdToken());
 
-            if(idToken == null){
+            if (idToken == null) {
                 return new ApiResponse<>(401, "Invalid Google Token", null);
             }
 
-            // extract data from google
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-
             String username = email.split("@")[0] + "_" + System.currentTimeMillis() % 1000;
+
             Optional<User> userOptional = userRepository.findByEmail(email);
-            User user;
-            String nomorSertifikasi = null;
 
-            // login scenario
-            if(userOptional.isPresent()){
-                user = userOptional.get();
 
-                if("MANDOR".equalsIgnoreCase(user.getRole().getName())){
-                    Optional<MandorProfile> mandorProfileOpt = mandorProfileRepository.findByUser(user);
-                    if (mandorProfileOpt.isPresent()) {
-                        nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
-                    }
-                }
-            }else{
-                // register scenario
-
-                if(request.getRole() == null || request.getRole().isBlank()){
-                    return new ApiResponse<>(400, "Account hasn't registered. Please select one of the roles (BURUH/MANDOR/SUPIR) to be registered.", null);
-                }
-
-                if ("ADMIN".equalsIgnoreCase(request.getRole())) {
-                    return new ApiResponse<>(403, "Registration as ADMIN is not allowed", null);
-                }
-
-                Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
-                        .orElseThrow(() -> new RuntimeException("Role invalid: " + request.getRole()));
-
-                if ("MANDOR".equalsIgnoreCase(userRole.getName())) {
-                    if (request.getNomorSertifikasi() == null || request.getNomorSertifikasi().isBlank()) {
-                        return new ApiResponse<>(400, "Mandor must fill Nomor Sertifikasi", null);
-                    }
-                    if (mandorProfileRepository.existsByNomorSertifikasi(request.getNomorSertifikasi())) {
-                        return new ApiResponse<>(400, "Nomor Sertifikasi is already registered", null);
-                    }
-                    nomorSertifikasi = request.getNomorSertifikasi();
-                }
-
-                user = User.builder()
-                        .username(username)
-                        .fullname(name)
-                        .email(email)
-                        .password(null) // Password null because login via Google
-                        .role(userRole)
-                        .authProvider("GOOGLE")
-                        .build();
-                user = userRepository.save(user);
-
-                if ("MANDOR".equalsIgnoreCase(userRole.getName())) {
-                    MandorProfile mandorProfile = MandorProfile.builder()
-                            .user(user)
-                            .nomorSertifikasi(nomorSertifikasi)
-                            .build();
-                    mandorProfileRepository.save(mandorProfile);
-                }
+            if (userOptional.isPresent()) {
+                return processExistingUser(userOptional.get());
+            } else {
+                return registerNewGoogleUser(request, email, name, username);
             }
 
-            UserResponseDTO profileDTO = UserResponseDTO.builder()
-                    .id(user.getId())
-                    .username(user.getUsername())
-                    .fullname(user.getFullname())
-                    .email(user.getEmail())
-                    .role(user.getRole().getName())
-                    .nomorSertifikasi(nomorSertifikasi)
-                    .build();
-
-            String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
-
-            AuthResponseDTO authData = AuthResponseDTO.builder()
-                    .accessToken(token)
-                    .user(profileDTO)
-                    .build();
-
-            return new ApiResponse<>(200, "Google Auth succeed! You are authenticated", authData);
-
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Error while verification Google Token: ", e);
             return new ApiResponse<>(500, "Error while verification Google Token: " + e.getMessage(), null);
         }
+    }
+
+
+    private ApiResponse<AuthResponseDTO> processExistingUser(User user) {
+        String nomorSertifikasi = null;
+
+        if (ROLE_MANDOR.equalsIgnoreCase(user.getRole().getName())) {
+            Optional<MandorProfile> mandorProfileOpt = mandorProfileRepository.findByUser(user);
+            if (mandorProfileOpt.isPresent()) {
+                nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
+            }
+        }
+
+        return buildSuccessResponse(user, nomorSertifikasi);
+    }
+
+    private ApiResponse<AuthResponseDTO> registerNewGoogleUser(GoogleAuthRequestDTO request, String email, String name, String username) {
+        if (request.getRole() == null || request.getRole().isBlank()) {
+            return new ApiResponse<>(400, "Account hasn't registered. Please select one of the roles (BURUH/MANDOR/SUPIR) to be registered.", null);
+        }
+
+        if (ROLE_ADMIN.equalsIgnoreCase(request.getRole())) {
+            return new ApiResponse<>(403, "Registration as ADMIN is not allowed", null);
+        }
+
+        Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
+                .orElseThrow(() -> new RuntimeException("Role invalid: " + request.getRole()));
+
+        String nomorSertifikasi = null;
+        if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
+            if (request.getNomorSertifikasi() == null || request.getNomorSertifikasi().isBlank()) {
+                return new ApiResponse<>(400, "Mandor must fill Nomor Sertifikasi", null);
+            }
+            if (mandorProfileRepository.existsByNomorSertifikasi(request.getNomorSertifikasi())) {
+                return new ApiResponse<>(400, "Nomor Sertifikasi is already registered", null);
+            }
+            nomorSertifikasi = request.getNomorSertifikasi();
+        }
+
+        User user = User.builder()
+                .username(username)
+                .fullname(name)
+                .email(email)
+                .password(null) // Password null because login via Google
+                .role(userRole)
+                .authProvider("GOOGLE")
+                .build();
+        user = userRepository.save(user);
+
+        if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
+            MandorProfile mandorProfile = MandorProfile.builder()
+                    .user(user)
+                    .nomorSertifikasi(nomorSertifikasi)
+                    .build();
+            mandorProfileRepository.save(mandorProfile);
+        }
+
+        return buildSuccessResponse(user, nomorSertifikasi);
+    }
+
+    private ApiResponse<AuthResponseDTO> buildSuccessResponse(User user, String nomorSertifikasi) {
+        UserResponseDTO profileDTO = UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .nomorSertifikasi(nomorSertifikasi)
+                .build();
+
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+
+        AuthResponseDTO authData = AuthResponseDTO.builder()
+                .accessToken(token)
+                .user(profileDTO)
+                .build();
+
+        return new ApiResponse<>(200, "Google Auth succeed! You are authenticated", authData);
     }
 
     @lombok.Generated
