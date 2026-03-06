@@ -17,3 +17,5 @@ app:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
     fullname: ${ADMIN_FULLNAME}
+  google:
+    clientId: ${GOOGLE_CLIENT_ID}
