@@ -1,35 +1,50 @@
 package my_sawit.authentication_manajemen_akun.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import my_sawit.authentication_manajemen_akun.dto.RegisterRequest;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.service.AuthService;
+import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
+import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
+import my_sawit.authentication_manajemen_akun.service.AuthStrategy;
+import my_sawit.authentication_manajemen_akun.service.GoogleAuthServiceImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthStrategy authStrategy;
+    private final GoogleAuthServiceImpl googleAuthServiceImpl;
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody RegisterRequest request){
-        User savedUser = authService.register(request);
-        return ResponseEntity.ok(savedUser);
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> register(@Valid @RequestBody RegisterRequestDTO request){
+        ApiResponse<AuthResponseDTO> response = authStrategy.register(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> fetchAllUsers(){
-        List<User> users = authService.fetchAllUsers();
-        return ResponseEntity.ok(users);
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
+
+        ApiResponse<AuthResponseDTO> response = authStrategy.login(request);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/ping")
-    public String ping(){
-        return "Auth is starting";
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> googleLogin(@Valid @RequestBody GoogleAuthRequestDTO request) {
+
+        ApiResponse<AuthResponseDTO> response = googleAuthServiceImpl.authenticate(request);
+
+        if (response.getStatusCode() == 200) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(response.getStatusCode()).body(response);
+        }
     }
+
 }

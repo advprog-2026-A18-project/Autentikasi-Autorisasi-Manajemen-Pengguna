@@ -37,11 +37,38 @@ jobs:
   Continuous-Deployment:
     needs: Continuous-Integration
     runs-on: ubuntu-22.04
-    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Dummy Deploy Step
+      - name: Check out the Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "gradle"
+
+      - name: Build JAR File
         run: |
-          echo "Starting deployment..."
-          echo "Contacting to PaaS..."
-          echo "Info: Platform as a Service is unavailable."
-          echo "[DUMMY] Application succeed to be deployed!"
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      - name: Log in to GHCR
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@4a13e500e55bc31b46b46889eb2bc76dbf4eb47c
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/advprog-2026-a18-project/autentikasi-autorisasi-manajemen-pengguna:latest
