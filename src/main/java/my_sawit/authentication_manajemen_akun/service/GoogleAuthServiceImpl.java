@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +41,7 @@ public class GoogleAuthServiceImpl {
     public ApiResponse<AuthResponseDTO> authenticate(GoogleAuthRequestDTO request){
         try{
 
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                    .setAudience(Collections.singletonList(googleClientId))
-                    .build();
-
-            GoogleIdToken idToken = verifier.verify(request.getIdToken());
+            GoogleIdToken idToken = verifyGoogleToken(request.getIdToken());
 
             if(idToken == null){
                 return new ApiResponse<>(401, "Invalid Google Token", null);
@@ -134,6 +132,14 @@ public class GoogleAuthServiceImpl {
             e.printStackTrace();
             return new ApiResponse<>(500, "Error while verification Google Token: " + e.getMessage(), null);
         }
+    }
+
+    @lombok.Generated
+    protected GoogleIdToken verifyGoogleToken(String idTokenString) throws GeneralSecurityException, IOException {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+        return verifier.verify(idTokenString);
     }
 
 }
