@@ -18,17 +18,31 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, unique = true)
+    private String username;
+
     @Column(nullable = false)
-    private String name;
+    private String fullname;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    // nullable true karena Google OAuth tidak pakai password
+    @Column(nullable = true)
     private String password;
 
-    @Column(nullable = false)
-    private String role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    // membedakan user yang regist via manual n login; LOCAL --> manual, GOOGLE --> oauth
+    @Column(name = "auth_provider", nullable = false)
+    @Builder.Default
+    private String authProvider = "LOCAL";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supervisor_id")
+    private User supervisor;
 
 
 }
