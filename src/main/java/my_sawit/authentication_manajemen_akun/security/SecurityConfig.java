@@ -26,6 +26,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        // testing aja
+                        //.requestMatchers("/test-google.html").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
