@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tester Google Auth MySawit</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; background-color: #f4f4f9;}
+        textarea { width: 100%; height: 150px; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;}
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
+    </style> </head>
+<body>
+<div class="container">
+    <h2>Simulator Frontend Google Auth</h2>
+    <p>Klik tombol di bawah untuk mendapatkan Token ID Google yang asli.</p>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <div id="g_id_onload"
+         data-client_id="#"
+         data-callback="tangkapTokenGoogle"
+         data-auto_prompt="false">
+    </div>
+
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+
+    <br><br>
+    <h4>Ini Token Anda (Copy semuanya untuk di-paste ke Postman):</h4>
+    <textarea id="kotakToken" placeholder="Token JWT dari Google akan muncul di sini setelah Anda login..."></textarea>
+
+    <script>
+        function tangkapTokenGoogle(response) {
+            document.getElementById('kotakToken').value = response.credential;
+            console.log("Token berhasil ditangkap! Silakan copy isinya.");
+        }
+    </script>
+</div>
+</body>
+</html>
