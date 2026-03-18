@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -45,6 +48,14 @@ public class AuthController {
         } else {
             return ResponseEntity.status(response.getStatusCode()).body(response);
         }
+    }
+
+    @GetMapping("/tes")
+    public Map<String, Object> tes() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Hello World");
+        response.put("status", "success");
+        return response;
     }
 
 }
