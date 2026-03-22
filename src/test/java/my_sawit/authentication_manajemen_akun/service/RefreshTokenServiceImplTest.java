@@ -29,8 +29,7 @@ class RefreshTokenServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
-    private RefreshTokenService refreshTokenService;
+    private RefreshTokenServiceImpl refreshTokenService;
 
     private User mockUser;
     private UUID userId;
@@ -43,12 +42,17 @@ class RefreshTokenServiceImplTest {
                 .username("burhan")
                 .email("burhan@sawit.com")
                 .build();
+        refreshTokenService = new RefreshTokenServiceImpl(
+                604800000L,
+                refreshTokenRepository,
+                userRepository
+        );
     }
 
     @Test
     void createRefreshToken_ShouldReturnValidToken() {
-        when(userRepository.findById(mockUser.getId())).thenReturn(mockUser);
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(token -> token.getArguments(0));
+        when(userRepository.findById(mockUser.getId())).thenReturn(Optional.of(mockUser));
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(token -> token.getArgument(0));
 
         RefreshToken result = refreshTokenService.createRefreshToken(userId);
 
@@ -61,7 +65,7 @@ class RefreshTokenServiceImplTest {
     @Test
     void verifyExpirationOfValidToken_ShouldReturnToken() {
         RefreshToken validToken = RefreshToken.builder()
-                .token(UUID.randomUUID())
+                .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusSeconds(3600))
                 .build();
 
@@ -82,7 +86,7 @@ class RefreshTokenServiceImplTest {
     @Test
     void verifyExpirationFailedIfExpiredToken_ShouldThrowException() {
         RefreshToken expiredToken = RefreshToken.builder()
-                .token(UUID.randomUUID())
+                .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().minusSeconds(10))
                 .build();
 
