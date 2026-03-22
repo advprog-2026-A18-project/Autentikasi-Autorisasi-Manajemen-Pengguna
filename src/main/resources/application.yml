@@ -4,6 +4,7 @@ server:
 jwt:
   secret: ${JWT_SECRET}
   expirationMs: 86400000
+  refreshExpirationMs: 604800000
 
 spring:
   profiles:
