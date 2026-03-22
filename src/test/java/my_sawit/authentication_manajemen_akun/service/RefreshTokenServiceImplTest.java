@@ -1,7 +1,9 @@
 package my_sawit.authentication_manajemen_akun.service;
 
 
+import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.User;
+import my_sawit.authentication_manajemen_akun.repository.RefreshTokenRepository;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class RefreshTokenServiceImpl {
+class RefreshTokenServiceImplTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
@@ -28,7 +30,7 @@ class RefreshTokenServiceImpl {
     private UserRepository userRepository;
 
     @InjectMocks
-    private RefreshTokenServiceImpl refreshTokenService;
+    private RefreshTokenService refreshTokenService;
 
     private User mockUser;
     private UUID userId;
