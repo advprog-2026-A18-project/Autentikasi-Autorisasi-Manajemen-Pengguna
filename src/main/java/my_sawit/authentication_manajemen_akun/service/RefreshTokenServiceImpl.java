@@ -1,6 +1,11 @@
 package my_sawit.authentication_manajemen_akun.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
+import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
+import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import my_sawit.authentication_manajemen_akun.model.RefreshToken;
@@ -23,6 +28,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
+    private final MandorProfileRepository mandorProfileRepository;
 
     @Override
     @Transactional
@@ -30,14 +37,20 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // will delete the old token if does exist
-        refreshTokenRepository.deleteByUser(user);
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUser(user);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(refreshTokenDuration))
-                .build();
+        RefreshToken refreshToken;
+        if (existingToken.isPresent()) {
+            refreshToken = existingToken.get();
+            refreshToken.setToken(UUID.randomUUID().toString());
+            refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDuration));
+        } else {
+            refreshToken = RefreshToken.builder()
+                    .user(user)
+                    .token(UUID.randomUUID().toString())
+                    .expiryDate(Instant.now().plusMillis(refreshTokenDuration))
+                    .build();
+        }
 
         return refreshTokenRepository.save(refreshToken);
     }
@@ -57,5 +70,47 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return refreshTokenRepository.findByToken(token);
     }
 
+    @Override
+    @Transactional
+    public void deleteByToken(String token) {
+        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponseDTO refreshAccessToken(String requestRefreshToken) {
+        return findByToken(requestRefreshToken)
+                .map(this::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+
+                    String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+
+                    String nomorSertifikasi = null;
+                    if ("MANDOR".equalsIgnoreCase(user.getRole().getName())) {
+                        Optional<MandorProfile> mandorProfile = mandorProfileRepository.findByUser(user);
+                        if (mandorProfile.isPresent()) {
+                            nomorSertifikasi = mandorProfile.get().getNomorSertifikasi();
+                        }
+                    }
+
+                    UserResponseDTO profileDTO = UserResponseDTO.builder()
+                            .id(user.getId())
+                            .username(user.getUsername())
+                            .fullname(user.getFullname())
+                            .email(user.getEmail())
+                            .role(user.getRole().getName())
+                            .nomorSertifikasi(nomorSertifikasi)
+                            .build();
+
+                    return AuthResponseDTO.builder()
+                            .accessToken(newAccessToken)
+                            .refreshToken(requestRefreshToken)
+                            .user(profileDTO)
+                            .build();
+
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+    }
 
 }
