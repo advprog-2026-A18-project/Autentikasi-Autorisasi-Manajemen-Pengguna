@@ -5,16 +5,16 @@ import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.request.TokenRefreshRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.service.AuthStrategy;
 import my_sawit.authentication_manajemen_akun.service.GoogleAuthServiceImpl;
+import my_sawit.authentication_manajemen_akun.service.RefreshTokenServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -23,6 +23,7 @@ public class AuthController {
 
     private final AuthStrategy authStrategy;
     private final GoogleAuthServiceImpl googleAuthServiceImpl;
+    private final RefreshTokenServiceImpl refreshTokenServiceImpl;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponseDTO>> register(@Valid @RequestBody RegisterRequestDTO request){
@@ -42,20 +43,22 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponseDTO>> googleLogin(@Valid @RequestBody GoogleAuthRequestDTO request) {
 
         ApiResponse<AuthResponseDTO> response = googleAuthServiceImpl.authenticate(request);
-
-        if (response.getStatusCode() == 200) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(response.getStatusCode()).body(response);
-        }
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @GetMapping("/tes")
-    public Map<String, Object> tes() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Hello World");
-        response.put("status", "success");
-        return response;
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponseDTO>> refresh(@Valid @RequestBody TokenRefreshRequestDTO request) {
+        AuthResponseDTO authData = refreshTokenServiceImpl.refreshAccessToken(request.getRefreshToken());
+
+        return ResponseEntity.ok(new ApiResponse<>(200, "Token refreshed successfully", authData));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody TokenRefreshRequestDTO request) {
+
+        refreshTokenServiceImpl.deleteByToken(request.getRefreshToken());
+        return ResponseEntity.ok(new ApiResponse<>(200, "Successfully logout", null));
+    }
+
 
 }
