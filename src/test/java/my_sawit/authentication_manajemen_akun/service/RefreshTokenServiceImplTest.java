@@ -3,8 +3,10 @@ package my_sawit.authentication_manajemen_akun.service;
 
 import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.User;
+import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.repository.RefreshTokenRepository;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,12 @@ class RefreshTokenServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private JwtUtils jwtUtils;
+
+    @Mock
+    private MandorProfileRepository mandorProfileRepository;
+
     private RefreshTokenServiceImpl refreshTokenService;
 
     private User mockUser;
@@ -45,13 +53,16 @@ class RefreshTokenServiceImplTest {
         refreshTokenService = new RefreshTokenServiceImpl(
                 604800000L,
                 refreshTokenRepository,
-                userRepository
+                userRepository,
+                jwtUtils,
+                mandorProfileRepository
         );
     }
 
     @Test
     void createRefreshToken_ShouldReturnValidToken() {
         when(userRepository.findById(mockUser.getId())).thenReturn(Optional.of(mockUser));
+        when(refreshTokenRepository.findByUser(mockUser)).thenReturn(Optional.empty());
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(token -> token.getArgument(0));
 
         RefreshToken result = refreshTokenService.createRefreshToken(userId);
@@ -59,6 +70,27 @@ class RefreshTokenServiceImplTest {
         assertNotNull(result);
         assertEquals(mockUser, result.getUser());
         assertNotNull(result.getToken());
+        assertTrue(result.getExpiryDate().isAfter(Instant.now()));
+    }
+
+    @Test
+    void createRefreshToken_ShouldUpdateExistingToken_WhenTokenAlreadyExists() {
+        RefreshToken existingToken = RefreshToken.builder()
+                .id(UUID.randomUUID())
+                .user(mockUser)
+                .token("old-token-string")
+                .expiryDate(Instant.now().minusSeconds(100))
+                .build();
+
+        when(userRepository.findById(mockUser.getId())).thenReturn(Optional.of(mockUser));
+        when(refreshTokenRepository.findByUser(mockUser)).thenReturn(Optional.of(existingToken));
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(token -> token.getArgument(0));
+
+        RefreshToken result = refreshTokenService.createRefreshToken(userId);
+
+        assertNotNull(result);
+        assertEquals(mockUser, result.getUser());
+        assertNotEquals("old-token-string", result.getToken());
         assertTrue(result.getExpiryDate().isAfter(Instant.now()));
     }
 
