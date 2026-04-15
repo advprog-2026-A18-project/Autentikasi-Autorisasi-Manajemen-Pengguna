@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             " LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
             "(:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
             "(:roleName IS NULL OR u.role.name = :roleName)")
-    Page<User> searchUsers(@Param("keyword") String keyword,
+    Page<User> searchUsers(@Param("name") String name,
                            @Param("email") String email,
                            @Param("roleName") String roleName,
                            Pageable pageable);
