@@ -5,12 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class AuthResponseDTO {
-    private String accessToken;
-    private String refreshToken;
-    private UserResponseDTO user;
+public class PagingResponseDTO<T> {
+    private List<T> content;
+    private int currentPage;
+    private int totalPages;
+    private long totalElements;
 }

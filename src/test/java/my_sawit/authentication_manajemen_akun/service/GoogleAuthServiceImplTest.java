@@ -5,6 +5,7 @@ import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
@@ -40,6 +41,9 @@ class GoogleAuthServiceImplTest {
     private JwtUtils jwtUtils;
 
     @Mock
+    private RefreshTokenService refreshTokenService;
+
+    @Mock
     private GoogleIdToken mockIdToken;
     @Mock
     private GoogleIdToken.Payload mockPayload;
@@ -51,6 +55,7 @@ class GoogleAuthServiceImplTest {
     private GoogleAuthRequestDTO request;
     private User mockUser;
     private Role mockRole;
+    private RefreshToken mockRefreshToken;
 
     @BeforeEach
     void setUp() {
@@ -68,6 +73,10 @@ class GoogleAuthServiceImplTest {
                 .role(mockRole)
                 .authProvider("GOOGLE")
                 .build();
+
+        mockRefreshToken = RefreshToken.builder()
+                .token("mock-refresh-token-uuid")
+                .build();
     }
 
     // helper method untuk fake respon dari server Google
@@ -78,9 +87,7 @@ class GoogleAuthServiceImplTest {
         when(mockPayload.get("name")).thenReturn("Test User");
     }
 
-    // ==========================================
     // VERIFIKASI GOOGLE GAGAL
-    // ==========================================
 
     @Test
     void authenticate_WhenTokenInvalid_ShouldReturn401() throws Exception {
@@ -102,19 +109,19 @@ class GoogleAuthServiceImplTest {
         assertTrue(response.getMessage().contains("Error while verification"));
     }
 
-    // ==========================================
     // LOGIN (PENGGUNA SUDAH ADA)
-    // ==========================================
 
     @Test
     void authenticate_LoginSuccess_AsBuruh_ShouldReturn200() throws Exception {
         mockGoogleTokenSuccess();
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
         assertEquals(200, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertNull(response.getData().getUser().getNomorSertifikasi());
         verify(mandorProfileRepository, never()).findByUser(any());
     }
@@ -128,10 +135,12 @@ class GoogleAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.of(profile));
         when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
         assertEquals(200, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("MND123", response.getData().getUser().getNomorSertifikasi());
     }
 
@@ -143,16 +152,16 @@ class GoogleAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.empty());
         when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
         assertEquals(200, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertNull(response.getData().getUser().getNomorSertifikasi());
     }
 
-    // ==========================================
     // REGISTER (PENGGUNA BARU)
-    // ==========================================
 
     @Test
     void authenticate_Register_WhenRoleNull_ShouldReturn400() throws Exception {
@@ -186,7 +195,6 @@ class GoogleAuthServiceImplTest {
         when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
-
 
         assertEquals(500, response.getStatusCode());
         assertTrue(response.getMessage().contains("Role invalid: INVALID_ROLE"));
@@ -235,11 +243,13 @@ class GoogleAuthServiceImplTest {
         when(mandorProfileRepository.existsByNomorSertifikasi(anyString())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
         assertEquals(200, response.getStatusCode());
         verify(mandorProfileRepository, times(1)).save(any(MandorProfile.class));
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("MND123", response.getData().getUser().getNomorSertifikasi());
     }
 
@@ -252,11 +262,13 @@ class GoogleAuthServiceImplTest {
         when(roleRepository.findByName("BURUH")).thenReturn(Optional.of(mockRole));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
         assertEquals(200, response.getStatusCode());
         verify(mandorProfileRepository, never()).save(any());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("BURUH", response.getData().getUser().getRole());
     }
 }
