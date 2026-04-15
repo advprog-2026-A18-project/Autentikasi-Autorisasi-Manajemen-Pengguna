@@ -220,6 +220,7 @@ class AdminServiceImplTest {
 
         Page<UserResponseDTO> result = userService.searchUsers(null, null, null, 0, 10);
 
+
         assertNotNull(result);
         assertNull(result.getContent().getFirst().getRole());
     }
