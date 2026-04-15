@@ -14,12 +14,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     private User mockBuruh;
+    private User mockBuruh2;
     private User mockSupir;
 
     @BeforeEach
@@ -46,6 +48,14 @@ class UserServiceImplTest {
                 .fullname("Bambang S")
                 .username("bambangz")
                 .email("bambang@sawit.com")
+                .role(buruhRole)
+                .build();
+
+        mockBuruh2 = User.builder()
+                .id(UUID.randomUUID())
+                .fullname("Bambang G")
+                .username("bambang_g")
+                .email("bambangg@sawit.com")
                 .role(buruhRole)
                 .build();
 
@@ -114,6 +124,24 @@ class UserServiceImplTest {
         assertNotNull(result);
         assertEquals("Agus S", result.getContent().getFirst().getFullname());
         assertEquals("SUPIR", result.getContent().getFirst().getRole());
+    }
+
+    @Test
+    void searchUsers_ShouldReturnMultipleResults_WhenMultipleMatchesFound() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> mockPage = new PageImpl<>(List.of(mockBuruh, mockBuruh2));
+
+        when(userRepository.searchUsers(eq("Bambang"), any(), any(), eq(pageable)))
+                .thenReturn(mockPage);
+
+        Page<UserResponseDTO> result = userService.searchUsers("Bambang", null, null, 0, 10);
+
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements() );
+        assertEquals(2, result.getContent().size());
+
+        assertEquals("Bambang S", result.getContent().getFirst().getFullname());
+        assertEquals("Bambang G", result.getContent().get(1).getFullname());
     }
 
 }
