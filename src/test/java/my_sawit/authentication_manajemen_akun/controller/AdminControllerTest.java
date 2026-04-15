@@ -1,5 +1,5 @@
 package my_sawit.authentication_manajemen_akun.controller;
-
+import my_sawit.authentication_manajemen_akun.dto.request.UserSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.service.UserService;
@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
@@ -54,8 +53,10 @@ class UserControllerTest {
         when(userService.searchUsers(isNull(), isNull(), isNull(), eq(0), eq(10)))
                 .thenReturn(mockPage);
 
+        UserSearchRequestDTO requestDTO = new UserSearchRequestDTO();
+
         ResponseEntity<ApiResponse<Page<UserResponseDTO>>> response =
-                userController.searchUsers(null, null, null, 0, 10);
+                userController.searchUsers(requestDTO);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -69,12 +70,23 @@ class UserControllerTest {
 
     @Test
     void searchUsers_WithParams_ShouldReturnFilteredData() {
+
         Page<UserResponseDTO> mockPage = new PageImpl<>(List.of(mockUserMandor));
         when(userService.searchUsers(eq("Andi"), eq("andi@sawit.com"), eq("MANDOR"), eq(1), eq(5)))
                 .thenReturn(mockPage);
 
+
+        UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
+                .name("Andi")
+                .email("andi@sawit.com")
+                .role("MANDOR")
+                .page(1)
+                .size(5)
+                .build();
+
+
         ResponseEntity<ApiResponse<Page<UserResponseDTO>>> response =
-                userController.searchUsers("Andi", "andi@sawit.com", "MANDOR", 1, 5);
+                userController.searchUsers(requestDTO);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -86,11 +98,18 @@ class UserControllerTest {
 
     @Test
     void searchUsers_WithInvalidRole_ShouldThrowException() {
-        when(userService.searchUsers(isNull(), isNull(), eq("HACKER"), anyInt(), anyInt()))
+
+        when(userService.searchUsers(isNull(), isNull(), eq("HACKER"), eq(0), eq(10)))
                 .thenThrow(new IllegalArgumentException("Role tidak valid: HACKER"));
 
+
+        UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
+                .role("HACKER")
+                .build();
+
+
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            userController.searchUsers(null, null, "HACKER", 0, 10);
+            userController.searchUsers(requestDTO);
         });
 
         assertEquals("Role tidak valid: HACKER", exception.getMessage());
