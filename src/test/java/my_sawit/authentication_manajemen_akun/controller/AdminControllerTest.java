@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -68,7 +69,7 @@ class AdminControllerTest {
 
         PagingResponseDTO<UserResponseDTO> responseData = response.getBody().getData();
         assertEquals(1L, responseData.getTotalElements());
-        assertEquals("Budi Santoso", responseData.getContent().get(0).getFullname());
+        assertEquals("Budi Santoso", responseData.getContent().getFirst().getFullname());
     }
 
     @Test
@@ -93,8 +94,8 @@ class AdminControllerTest {
         assertNotNull(response.getBody());
 
         PagingResponseDTO<UserResponseDTO> responseData = response.getBody().getData();
-        assertEquals("Andi Mandor", responseData.getContent().get(0).getFullname());
-        assertEquals("MANDOR", responseData.getContent().get(0).getRole());
+        assertEquals("Andi Mandor", responseData.getContent().getFirst().getFullname());
+        assertEquals("MANDOR", responseData.getContent().getFirst().getRole());
     }
 
     @Test
@@ -212,4 +213,53 @@ class AdminControllerTest {
 
         assertEquals("Data Buruh tidak ditemukan", exception.getMessage());
     }
+
+    // delete-by-admin
+
+    @Test
+    void deleteUser_ShouldReturnSuccessResponse() {
+        UUID targetId = UUID.randomUUID();
+        Principal mockPrincipal = () -> "admin@sawit.com";
+
+        org.mockito.Mockito.doNothing().when(userService).deleteUser(targetId, "admin@sawit.com");
+
+        ResponseEntity<ApiResponse<Object>> response = adminController.deleteUser(targetId, mockPrincipal);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().getStatusCode());
+        assertEquals("Berhasil menghapus pengguna", response.getBody().getMessage());
+        assertNull(response.getBody().getData());
+    }
+
+    @Test
+    void deleteUser_ShouldThrowException_WhenTryingToDeleteSelf() {
+        UUID targetId = UUID.randomUUID();
+        Principal mockPrincipal = () -> "admin@sawit.com";
+
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri."))
+                .when(userService).deleteUser(targetId, "admin@sawit.com");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            adminController.deleteUser(targetId, mockPrincipal);
+        });
+
+        assertEquals("Admin tidak dapat menghapus dirinya sendiri.", exception.getMessage());
+    }
+
+    @Test
+    void deleteUser_ShouldThrowException_WhenUserNotFound() {
+        UUID fiktifId = UUID.randomUUID();
+        Principal mockPrincipal = () -> "admin@sawit.com";
+
+        org.mockito.Mockito.doThrow(new RuntimeException("Data pengguna tidak ditemukan"))
+                .when(userService).deleteUser(fiktifId, "admin@sawit.com");
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            adminController.deleteUser(fiktifId, mockPrincipal);
+        });
+
+        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+    }
+
 }
