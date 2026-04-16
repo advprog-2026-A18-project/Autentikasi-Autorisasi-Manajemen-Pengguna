@@ -24,7 +24,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull; 
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,7 @@ class AdminServiceImplTest {
     private User mockSupir;
     private User mockMandor;
     private User mockMandor2;
+    private User mockAdmin;
     private MandorProfile mockMandorProfile;
 
     @BeforeEach
@@ -51,6 +53,7 @@ class AdminServiceImplTest {
         Role buruhRole = Role.builder().name("BURUH").build();
         Role supirRole = Role.builder().name("SUPIR").build();
         Role mandorRole = Role.builder().name("MANDOR").build();
+        Role adminRole = Role.builder().name("ADMIN").build();
 
         mockBuruh = User.builder()
                 .id(UUID.randomUUID())
@@ -90,6 +93,14 @@ class AdminServiceImplTest {
                 .email("mandorb@sawit.com")
                 .fullname("Mandor B")
                 .role(mandorRole)
+                .build();
+
+        mockAdmin = User.builder()
+                .id(UUID.randomUUID())
+                .fullname("Admin Utama")
+                .username("admin_utama")
+                .email("admin@sawit.com")
+                .role(adminRole)
                 .build();
 
         mockMandorProfile = MandorProfile.builder()
@@ -356,5 +367,51 @@ class AdminServiceImplTest {
 
         assertEquals("Hanya role BURUH yang dapat dicopot penugasannya.", exception.getMessage());
     }
+
+    // delete-by-admin
+
+    @Test
+    void deleteUser_ShouldDeleteSuccessfully() {
+        UUID targetId = mockBuruh.getId();
+        String currentAdminEmail = "admin@sawit.com";
+
+        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockBuruh));
+
+        userService.deleteUser(targetId, currentAdminEmail);
+
+        verify(userRepository, org.mockito.Mockito.times(1)).delete(mockBuruh);
+    }
+
+    @Test
+    void deleteUser_ShouldThrowException_WhenDeletingSelf() {
+        UUID targetId = mockAdmin.getId();
+        String currentAdminEmail = "admin@sawit.com";
+
+        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockAdmin));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.deleteUser(targetId, currentAdminEmail);
+        });
+
+        assertEquals("Admin tidak dapat menghapus dirinya sendiri.", exception.getMessage());
+
+        verify(userRepository, org.mockito.Mockito.never()).delete(any());
+    }
+
+    @Test
+    void deleteUser_ShouldThrowException_WhenUserNotFound() {
+        UUID targetId = UUID.randomUUID();
+        String currentAdminEmail = "admin@sawit.com";
+
+        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.deleteUser(targetId, currentAdminEmail);
+        });
+
+        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+    }
+
+
 
 }
