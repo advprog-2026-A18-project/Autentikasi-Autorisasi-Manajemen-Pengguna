@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +42,45 @@ public class UserServiceImpl implements UserService {
         return usersPage.map(this::convertToResponseDTO);
     }
 
+    @Override
+    @Transactional
+    public UserResponseDTO assignMandor(UUID buruhId, UUID mandorId) {
+        User buruh = userRepository.findById(buruhId)
+                .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
+
+        User mandor = userRepository.findById(mandorId)
+                .orElseThrow(() -> new RuntimeException("Data Mandor tidak ditemukan"));
+
+        if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
+            throw new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH.");
+        }
+
+        if (mandor.getRole() == null || !"MANDOR".equalsIgnoreCase(mandor.getRole().getName())) {
+            throw new IllegalArgumentException("Target atasan harus memiliki role MANDOR.");
+        }
+
+        buruh.setMandor(mandor);
+        userRepository.save(buruh);
+
+        return convertToResponseDTO(buruh);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO unassignMandor(UUID buruhId) {
+        User buruh = userRepository.findById(buruhId)
+                .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
+
+        if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
+            throw new IllegalArgumentException("Hanya role BURUH yang dapat dicopot penugasannya.");
+        }
+
+        buruh.setMandor(null);
+        userRepository.save(buruh);
+
+        return convertToResponseDTO(buruh);
+    }
+
     private UserResponseDTO convertToResponseDTO(User user) {
         String nomorSertifikasi = null;
 
@@ -50,6 +90,9 @@ public class UserServiceImpl implements UserService {
                 nomorSertifikasi = profile.get().getNomorSertifikasi();
             }
         }
+
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
         return UserResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -57,6 +100,9 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .role(user.getRole() != null ? user.getRole().getName() : null)
                 .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
                 .build();
     }
+
+
 }
