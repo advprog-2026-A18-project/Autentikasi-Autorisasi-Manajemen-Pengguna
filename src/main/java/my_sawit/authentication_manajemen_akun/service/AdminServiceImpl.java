@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
     private final MandorProfileRepository mandorProfileRepository;

@@ -5,7 +5,7 @@ import my_sawit.authentication_manajemen_akun.dto.request.UserSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.UserService;
+import my_sawit.authentication_manajemen_akun.service.AdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,11 +21,11 @@ import java.util.UUID;
 @PreAuthorize("hasAuthority('ADMIN')")
 public class AdminController {
 
-    private final UserService userService;
+    private final AdminService adminService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PagingResponseDTO<UserResponseDTO>>> searchUsers(@ModelAttribute UserSearchRequestDTO searchRequest) {
-        Page<UserResponseDTO> usersPage = userService.searchUsers(
+        Page<UserResponseDTO> usersPage = adminService.searchUsers(
                 searchRequest.getName(),
                 searchRequest.getEmail(),
                 searchRequest.getRole(),
@@ -51,7 +51,7 @@ public class AdminController {
             @PathVariable UUID buruhId,
             @PathVariable UUID mandorId
     ) {
-        UserResponseDTO updatedUser = userService.assignMandor(buruhId, mandorId);
+        UserResponseDTO updatedUser = adminService.assignMandor(buruhId, mandorId);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
@@ -65,7 +65,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponseDTO>> unassignMandor(
             @PathVariable UUID buruhId
     ) {
-        UserResponseDTO updatedUser = userService.unassignMandor(buruhId);
+        UserResponseDTO updatedUser = adminService.unassignMandor(buruhId);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
@@ -76,7 +76,7 @@ public class AdminController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<ApiResponse<Object>> deleteUser(@PathVariable UUID userId, Principal principal) {
-        userService.deleteUser(userId, principal.getName());
+        adminService.deleteUser(userId, principal.getName());
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
@@ -87,7 +87,7 @@ public class AdminController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserDetail(@PathVariable UUID userId) {
-        UserResponseDTO userDetail = userService.getUserDetail(userId);
+        UserResponseDTO userDetail = adminService.getUserDetail(userId);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,

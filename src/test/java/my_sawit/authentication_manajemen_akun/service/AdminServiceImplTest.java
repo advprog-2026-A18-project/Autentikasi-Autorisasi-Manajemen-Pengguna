@@ -42,7 +42,7 @@ class AdminServiceImplTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private AdminServiceImpl userService;
 
     private User mockBuruh;
     private User mockBuruh2;

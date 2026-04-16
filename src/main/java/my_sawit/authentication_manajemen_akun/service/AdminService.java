@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
-public interface UserService {
+public interface AdminService {
 
     Page<UserResponseDTO> searchUsers(String name, String email, String role, int page, int size);
 
