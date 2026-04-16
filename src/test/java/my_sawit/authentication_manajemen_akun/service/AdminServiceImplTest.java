@@ -5,6 +5,7 @@ import my_sawit.authentication_manajemen_akun.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.repository.RefreshTokenRepository;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,8 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AdminServiceImplTest {
@@ -36,6 +37,9 @@ class AdminServiceImplTest {
 
     @Mock
     private MandorProfileRepository mandorProfileRepository;
+
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -253,8 +257,8 @@ class AdminServiceImplTest {
         UUID buruhId = mockBuruh.getId();
         UUID mandorId = mockMandor.getId();
 
-        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
-        when(userRepository.findById(mandorId)).thenReturn(java.util.Optional.of(mockMandor));
+        when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.findById(mandorId)).thenReturn(Optional.of(mockMandor));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UserResponseDTO result = userService.assignMandor(buruhId, mandorId);
@@ -269,8 +273,8 @@ class AdminServiceImplTest {
         UUID buruhId = mockBuruh.getId();
         UUID mandor2Id = mockMandor2.getId();
 
-        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
-        when(userRepository.findById(mandor2Id)).thenReturn(java.util.Optional.of(mockMandor2));
+        when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.findById(mandor2Id)).thenReturn(Optional.of(mockMandor2));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UserResponseDTO result = userService.assignMandor(buruhId, mandor2Id);
@@ -285,7 +289,7 @@ class AdminServiceImplTest {
         UUID fiktifId = UUID.randomUUID();
         UUID mandorId = mockMandor.getId();
 
-        when(userRepository.findById(fiktifId)).thenReturn(java.util.Optional.empty());
+        when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             userService.assignMandor(fiktifId, mandorId);
@@ -299,8 +303,8 @@ class AdminServiceImplTest {
         UUID buruhId = mockBuruh.getId();
         UUID fiktifId = UUID.randomUUID();
 
-        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
-        when(userRepository.findById(fiktifId)).thenReturn(java.util.Optional.empty());
+        when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             userService.assignMandor(buruhId, fiktifId);
@@ -314,8 +318,8 @@ class AdminServiceImplTest {
         UUID supirId = mockSupir.getId();
         UUID mandorId = mockMandor.getId();
 
-        when(userRepository.findById(supirId)).thenReturn(java.util.Optional.of(mockSupir));
-        when(userRepository.findById(mandorId)).thenReturn(java.util.Optional.of(mockMandor));
+        when(userRepository.findById(supirId)).thenReturn(Optional.of(mockSupir));
+        when(userRepository.findById(mandorId)).thenReturn(Optional.of(mockMandor));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.assignMandor(supirId, mandorId);
@@ -329,8 +333,8 @@ class AdminServiceImplTest {
         UUID buruhId = mockBuruh.getId();
         UUID atasanId = mockSupir.getId();
 
-        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
-        when(userRepository.findById(atasanId)).thenReturn(java.util.Optional.of(mockSupir));
+        when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.findById(atasanId)).thenReturn(Optional.of(mockSupir));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.assignMandor(buruhId, atasanId);
@@ -345,7 +349,7 @@ class AdminServiceImplTest {
         mockBuruh.setMandor(mockMandor);
         UUID buruhId = mockBuruh.getId();
 
-        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UserResponseDTO result = userService.unassignMandor(buruhId);
@@ -359,7 +363,7 @@ class AdminServiceImplTest {
         mockMandor.setMandor(mockMandor2);
         UUID targetId = mockMandor.getId();
 
-        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockMandor));
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockMandor));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.unassignMandor(targetId);
@@ -375,11 +379,43 @@ class AdminServiceImplTest {
         UUID targetId = mockBuruh.getId();
         String currentAdminEmail = "admin@sawit.com";
 
-        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockBuruh));
+
+        when(userRepository.findByMandor(mockBuruh)).thenReturn(Collections.emptyList());
+        when(refreshTokenRepository.findByUser(mockBuruh)).thenReturn(Optional.empty());
 
         userService.deleteUser(targetId, currentAdminEmail);
 
-        verify(userRepository, org.mockito.Mockito.times(1)).delete(mockBuruh);
+        verify(userRepository, times(2)).flush();
+
+        verify(userRepository, times(1)).deleteById(targetId);
+    }
+
+    @Test
+    void deleteUser_ShouldBuruhReferToMandorWillNull_WhenDeletingMandor() {
+        UUID targetId = mockMandor.getId();
+        String currentAdminEmail = "admin@sawit.com";
+
+        User buruh1 = User.builder().id(UUID.randomUUID()).fullname("Bawahan 1").mandor(mockMandor).build();
+        User buruh2 = User.builder().id(UUID.randomUUID()).fullname("Bawahan 2").mandor(mockMandor).build();
+        List<User> kumpulanBuruh = List.of(buruh1, buruh2);
+
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockMandor));
+        when(userRepository.findByMandor(mockMandor)).thenReturn(kumpulanBuruh);
+        when(refreshTokenRepository.findByUser(mockMandor)).thenReturn(Optional.empty());
+        when(mandorProfileRepository.findByUser(mockMandor)).thenReturn(Optional.empty());
+
+        userService.deleteUser(targetId, currentAdminEmail);
+
+        assertNull(buruh1.getMandor());
+        assertNull(buruh2.getMandor());
+
+        verify(userRepository, times(1)).save(buruh1);
+        verify(userRepository, times(1)).save(buruh2);
+
+        verify(userRepository, times(2)).flush();
+
+        verify(userRepository, times(1)).deleteById(targetId);
     }
 
     @Test
@@ -387,7 +423,7 @@ class AdminServiceImplTest {
         UUID targetId = mockAdmin.getId();
         String currentAdminEmail = "admin@sawit.com";
 
-        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockAdmin));
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockAdmin));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.deleteUser(targetId, currentAdminEmail);
@@ -395,7 +431,7 @@ class AdminServiceImplTest {
 
         assertEquals("Admin tidak dapat menghapus dirinya sendiri.", exception.getMessage());
 
-        verify(userRepository, org.mockito.Mockito.never()).delete(any());
+        verify(userRepository, never()).deleteById(any());
     }
 
     @Test
@@ -403,7 +439,7 @@ class AdminServiceImplTest {
         UUID targetId = UUID.randomUUID();
         String currentAdminEmail = "admin@sawit.com";
 
-        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.empty());
+        when(userRepository.findById(targetId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             userService.deleteUser(targetId, currentAdminEmail);
@@ -411,7 +447,6 @@ class AdminServiceImplTest {
 
         assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
     }
-
 
 
 }
