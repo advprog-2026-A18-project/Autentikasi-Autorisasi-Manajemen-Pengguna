@@ -448,5 +448,56 @@ class AdminServiceImplTest {
         assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
     }
 
+    // admin-fetch-detail-profile-user
+
+    @Test
+    void getUserDetail_Buruh_ShouldReturnCorrectDetails() {
+        UUID targetId = mockBuruh.getId();
+        mockBuruh.setMandor(mockMandor);
+
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockBuruh));
+
+        UserResponseDTO result = userService.getUserDetail(targetId);
+
+        assertNotNull(result);
+        assertEquals(mockBuruh.getId(), result.getId());
+        assertEquals("Bambang S", result.getFullname());
+        assertEquals("BURUH", result.getRole());
+
+        assertEquals("Mandor A", result.getNamaMandor());
+        assertNull(result.getNomorSertifikasi());
+    }
+
+    @Test
+    void getUserDetail_Mandor_ShouldReturnCorrectDetails() {
+        UUID targetId = mockMandor.getId();
+
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(mockMandor));
+        when(mandorProfileRepository.findByUser(mockMandor)).thenReturn(Optional.of(mockMandorProfile));
+
+        UserResponseDTO result = userService.getUserDetail(targetId);
+
+        assertNotNull(result);
+        assertEquals(mockMandor.getId(), result.getId());
+        assertEquals("Mandor A", result.getFullname());
+        assertEquals("MANDOR", result.getRole());
+
+        assertEquals("MNDR-001", result.getNomorSertifikasi());
+        assertNull(result.getNamaMandor());
+    }
+
+    @Test
+    void getUserDetail_ShouldThrowException_WhenUserNotFound() {
+        UUID fiktifId = UUID.randomUUID();
+
+        when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.getUserDetail(fiktifId);
+        });
+
+        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+    }
+
 
 }
