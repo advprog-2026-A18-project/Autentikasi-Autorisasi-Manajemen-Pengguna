@@ -11,4 +11,7 @@ public interface UserService {
 
     UserResponseDTO assignMandor(UUID buruhId, UUID mandorId);
     UserResponseDTO unassignMandor(UUID buruhId);
+
+    void deleteUser(UUID userId, String adminEmail);
+
 }
