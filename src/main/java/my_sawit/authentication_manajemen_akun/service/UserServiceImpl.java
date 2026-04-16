@@ -114,6 +114,15 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(targetId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponseDTO getUserDetail(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
+
+        return convertToResponseDTO(user);
+    }
+
     private UserResponseDTO convertToResponseDTO(User user) {
         String nomorSertifikasi = null;
 

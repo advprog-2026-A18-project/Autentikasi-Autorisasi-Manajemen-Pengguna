@@ -24,7 +24,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AdminControllerTest {
@@ -257,6 +257,50 @@ class AdminControllerTest {
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             adminController.deleteUser(fiktifId, mockPrincipal);
+        });
+
+        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+    }
+
+    // admin-fetch-detail-profile-user
+
+
+    @Test
+    void getUserDetail_ShouldReturnSuccessResponse() {
+        UUID targetId = UUID.randomUUID();
+        UserResponseDTO expectedResponse = UserResponseDTO.builder()
+                .id(targetId)
+                .fullname("Budi Santoso")
+                .role("BURUH")
+                .namaMandor("Andi Mandor")
+                .build();
+
+
+        when(userService.getUserDetail(targetId)).thenReturn(expectedResponse);
+
+
+        ResponseEntity<ApiResponse<UserResponseDTO>> response = adminController.getUserDetail(targetId);
+
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().getStatusCode());
+        assertEquals("Berhasil mengambil detail pengguna", response.getBody().getMessage());
+        assertEquals("Budi Santoso", response.getBody().getData().getFullname());
+        assertEquals("Andi Mandor", response.getBody().getData().getNamaMandor());
+
+
+        verify(userService, times(1)).getUserDetail(targetId);
+    }
+
+    @Test
+    void getUserDetail_ShouldThrowException_WhenUserNotFound() {
+        UUID fiktifId = UUID.randomUUID();
+        when(userService.getUserDetail(fiktifId))
+                .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            adminController.getUserDetail(fiktifId);
         });
 
         assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
