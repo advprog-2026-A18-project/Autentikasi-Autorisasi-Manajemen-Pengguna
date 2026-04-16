@@ -67,4 +67,55 @@ class UserControllerTest {
 
         assertEquals("Profil tidak ditemukan", exception.getMessage());
     }
+
+    // update-profile
+
+    @Test
+    void updateMyProfile_ShouldReturn200AndUpdatedProfileData() {
+        UserUpdateRequestDTO requestDTO =
+                UserUpdateRequestDTO.builder()
+                        .fullname("Budi Santoso")
+                        .username("budi_santoso")
+                        .build();
+
+        UserResponseDTO mockResponse = UserResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .email("budi@sawit.com")
+                .fullname("Budi Santoso")
+                .username("budi_santoso")
+                .role("BURUH")
+                .build();
+
+        when(userService.updateMyProfile("budi@sawit.com", requestDTO)).thenReturn(mockResponse);
+
+        ResponseEntity<ApiResponse<UserResponseDTO>> response = userController.updateMyProfile(mockPrincipal, requestDTO);
+
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().getStatusCode());
+        assertEquals("Berhasil memperbarui profil", response.getBody().getMessage());
+        assertEquals("Budi Santoso", response.getBody().getData().getFullname());
+        assertEquals("budi_santoso", response.getBody().getData().getUsername());
+
+        verify(userService, times(1)).updateMyProfile("budi@sawit.com", requestDTO);
+    }
+
+    @Test
+    void updateMyProfile_ShouldThrowException_WhenUsernameTaken() {
+        UserUpdateRequestDTO requestDTO =
+                UserUpdateRequestDTO.builder()
+                        .fullname("Budi")
+                        .username("mandor_agus")
+                        .build();
+
+        when(userService.updateMyProfile("budi@sawit.com", requestDTO))
+                .thenThrow(new IllegalArgumentException("Username sudah digunakan oleh pengguna lain"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userController.updateMyProfile(mockPrincipal, requestDTO);
+        });
+
+        assertEquals("Username sudah digunakan oleh pengguna lain", exception.getMessage());
+    }
 }

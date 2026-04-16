@@ -104,4 +104,68 @@ class UserServiceImplTest {
 
         assertEquals("Profil tidak ditemukan", exception.getMessage());
     }
+
+    // update-profile
+
+    @Test
+    void updateMyProfile_ShouldUpdateSuccessfully() {
+        String email = "buruh@sawit.com";
+        UserUpdateRequestDTO requestDTO =
+                UserUpdateRequestDTO.builder()
+                        .fullname("Budi Santoso")
+                        .username("budi_santoso")
+                        .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.existsByUsername("budi_santoso")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserResponseDTO result = userService.updateMyProfile(email, requestDTO);
+
+        assertNotNull(result);
+        assertEquals("Budi Santoso", result.getFullname());
+        assertEquals("budi_santoso", result.getUsername());
+
+
+        verify(userRepository, times(1)).save(mockBuruh);
+    }
+
+    @Test
+    void updateMyProfile_ShouldThrowException_WhenUsernameAlreadyTaken() {
+        String email = "buruh@sawit.com";
+        UserUpdateRequestDTO requestDTO =
+                UserUpdateRequestDTO.builder()
+                        .fullname("Budi Santoso")
+                        .username("mandor_agus")
+                        .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockBuruh));
+        when(userRepository.existsByUsername("mandor_agus")).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateMyProfile(email, requestDTO);
+        });
+
+        assertEquals("Username sudah digunakan oleh pengguna lain", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateMyProfile_ShouldThrowException_WhenEmailNotFound() {
+        String email = "ghost@sawit.com";
+        UserUpdateRequestDTO requestDTO =
+                UserUpdateRequestDTO.builder()
+                        .fullname("Hantu")
+                        .username("hantu123")
+                        .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.updateMyProfile(email, requestDTO);
+        });
+
+        assertEquals("Profil tidak ditemukan", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
 }
