@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull; 
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,7 @@ class AdminServiceImplTest {
     private User mockBuruh2;
     private User mockSupir;
     private User mockMandor;
+    private User mockMandor2;
     private MandorProfile mockMandorProfile;
 
     @BeforeEach
@@ -79,6 +81,14 @@ class AdminServiceImplTest {
                 .username("mandor agus")
                 .email("mandoragus@sawit.com")
                 .fullname("Mandor A")
+                .role(mandorRole)
+                .build();
+
+        mockMandor2 = User.builder()
+                .id(UUID.randomUUID())
+                .username("mandor_b")
+                .email("mandorb@sawit.com")
+                .fullname("Mandor B")
                 .role(mandorRole)
                 .build();
 
@@ -224,4 +234,127 @@ class AdminServiceImplTest {
         assertNotNull(result);
         assertNull(result.getContent().getFirst().getRole());
     }
+
+    // ASSIGNING BURUH-MANDOR
+
+    @Test
+    void assignMandor_ShouldAssignSuccessfully() {
+        UUID buruhId = mockBuruh.getId();
+        UUID mandorId = mockMandor.getId();
+
+        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(mandorId)).thenReturn(java.util.Optional.of(mockMandor));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserResponseDTO result = userService.assignMandor(buruhId, mandorId);
+
+        assertNotNull(result);
+        assertEquals(mockMandor, mockBuruh.getMandor());
+    }
+
+    @Test
+    void assignMandor_ShouldReassignSuccessfully() {
+        mockBuruh.setMandor(mockMandor);
+        UUID buruhId = mockBuruh.getId();
+        UUID mandor2Id = mockMandor2.getId();
+
+        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(mandor2Id)).thenReturn(java.util.Optional.of(mockMandor2));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserResponseDTO result = userService.assignMandor(buruhId, mandor2Id);
+
+        assertNotNull(result);
+        assertEquals(mockMandor2, mockBuruh.getMandor());
+        assertNotEquals(mockMandor, mockBuruh.getMandor());
+    }
+
+    @Test
+    void assignMandor_ShouldThrowException_WhenBuruhNotFound() {
+        UUID fiktifId = UUID.randomUUID();
+        UUID mandorId = mockMandor.getId();
+
+        when(userRepository.findById(fiktifId)).thenReturn(java.util.Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.assignMandor(fiktifId, mandorId);
+        });
+
+        assertEquals("Data Buruh tidak ditemukan", exception.getMessage());
+    }
+
+    @Test
+    void assignMandor_ShouldThrowException_WhenMandorNotFound() {
+        UUID buruhId = mockBuruh.getId();
+        UUID fiktifId = UUID.randomUUID();
+
+        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(fiktifId)).thenReturn(java.util.Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.assignMandor(buruhId, fiktifId);
+        });
+
+        assertEquals("Data Mandor tidak ditemukan", exception.getMessage());
+    }
+
+    @Test
+    void assignMandor_ShouldThrowException_WhenTargetIsNotBuruh() {
+        UUID supirId = mockSupir.getId();
+        UUID mandorId = mockMandor.getId();
+
+        when(userRepository.findById(supirId)).thenReturn(java.util.Optional.of(mockSupir));
+        when(userRepository.findById(mandorId)).thenReturn(java.util.Optional.of(mockMandor));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.assignMandor(supirId, mandorId);
+        });
+
+        assertEquals("Pengguna yang ditugaskan harus memiliki role BURUH.", exception.getMessage());
+    }
+
+    @Test
+    void assignMandor_ShouldThrowException_WhenSupervisorIsNotMandor() {
+        UUID buruhId = mockBuruh.getId();
+        UUID atasanId = mockSupir.getId();
+
+        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.findById(atasanId)).thenReturn(java.util.Optional.of(mockSupir));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.assignMandor(buruhId, atasanId);
+        });
+
+        assertEquals("Target atasan harus memiliki role MANDOR.", exception.getMessage());
+    }
+
+
+    @Test
+    void unassignMandor_ShouldUnassignSuccessfully() {
+        mockBuruh.setMandor(mockMandor);
+        UUID buruhId = mockBuruh.getId();
+
+        when(userRepository.findById(buruhId)).thenReturn(java.util.Optional.of(mockBuruh));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserResponseDTO result = userService.unassignMandor(buruhId);
+
+        assertNotNull(result);
+        assertNull(mockBuruh.getMandor());
+    }
+
+    @Test
+    void unassignMandor_ShouldThrowException_WhenTargetIsNotBuruh() {
+        mockMandor.setMandor(mockMandor2);
+        UUID targetId = mockMandor.getId();
+
+        when(userRepository.findById(targetId)).thenReturn(java.util.Optional.of(mockMandor));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.unassignMandor(targetId);
+        });
+
+        assertEquals("Hanya role BURUH yang dapat dicopot penugasannya.", exception.getMessage());
+    }
+
 }
