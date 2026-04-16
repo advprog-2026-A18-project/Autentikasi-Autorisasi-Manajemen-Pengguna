@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
@@ -39,5 +41,34 @@ public class AdminController {
                 .build();
 
         return ResponseEntity.ok(new ApiResponse<>(200, message, pagingData));
+    }
+
+
+    @PutMapping("/{buruhId}/assign-mandor/{mandorId}")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> assignMandor(
+            @PathVariable UUID buruhId,
+            @PathVariable UUID mandorId
+    ) {
+        UserResponseDTO updatedUser = userService.assignMandor(buruhId, mandorId);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Berhasil menugaskan mandor",
+                updatedUser
+        ));
+    }
+
+
+    @PutMapping("/{buruhId}/unassign-mandor")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> unassignMandor(
+            @PathVariable UUID buruhId
+    ) {
+        UserResponseDTO updatedUser = userService.unassignMandor(buruhId);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Berhasil mencopot penugasan mandor",
+                updatedUser
+        ));
     }
 }
