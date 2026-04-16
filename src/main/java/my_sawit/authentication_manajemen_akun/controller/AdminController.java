@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 import java.util.UUID;
 
 @RestController
@@ -69,6 +71,17 @@ public class AdminController {
                 200,
                 "Berhasil mencopot penugasan mandor",
                 updatedUser
+        ));
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Object>> deleteUser(@PathVariable UUID userId, Principal principal) {
+        userService.deleteUser(userId, principal.getName());
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Berhasil menghapus pengguna",
+                null
         ));
     }
 }
