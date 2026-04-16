@@ -4,7 +4,7 @@ import my_sawit.authentication_manajemen_akun.dto.request.UserSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.UserService;
+import my_sawit.authentication_manajemen_akun.service.AdminService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class AdminControllerTest {
 
     @Mock
-    private UserService userService;
+    private AdminService adminService;
 
     @InjectMocks
     private AdminController adminController;
@@ -54,7 +54,7 @@ class AdminControllerTest {
     @Test
     void searchUsers_WithoutParams_ShouldReturnSuccess() {
         Page<UserResponseDTO> mockPage = new PageImpl<>(List.of(mockUserBuruh));
-        when(userService.searchUsers(isNull(), isNull(), isNull(), eq(0), eq(10)))
+        when(adminService.searchUsers(isNull(), isNull(), isNull(), eq(0), eq(10)))
                 .thenReturn(mockPage);
 
         UserSearchRequestDTO requestDTO = new UserSearchRequestDTO();
@@ -75,7 +75,7 @@ class AdminControllerTest {
     @Test
     void searchUsers_WithParams_ShouldReturnFilteredData() {
         Page<UserResponseDTO> mockPage = new PageImpl<>(List.of(mockUserMandor));
-        when(userService.searchUsers(eq("Andi"), eq("andi@sawit.com"), eq("MANDOR"), eq(1), eq(5)))
+        when(adminService.searchUsers(eq("Andi"), eq("andi@sawit.com"), eq("MANDOR"), eq(1), eq(5)))
                 .thenReturn(mockPage);
 
         UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
@@ -101,7 +101,7 @@ class AdminControllerTest {
     @Test
     void searchUsers_EmptyData_ShouldReturnNoUsersFetchedMessage() {
         Page<UserResponseDTO> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(userService.searchUsers(eq("Fiktif"), isNull(), isNull(), eq(0), eq(10)))
+        when(adminService.searchUsers(eq("Fiktif"), isNull(), isNull(), eq(0), eq(10)))
                 .thenReturn(emptyPage);
 
         UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
@@ -124,7 +124,7 @@ class AdminControllerTest {
 
     @Test
     void searchUsers_WithInvalidRole_ShouldThrowException() {
-        when(userService.searchUsers(isNull(), isNull(), eq("HACKER"), eq(0), eq(10)))
+        when(adminService.searchUsers(isNull(), isNull(), eq("HACKER"), eq(0), eq(10)))
                 .thenThrow(new IllegalArgumentException("Role tidak valid: HACKER"));
 
         UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
@@ -151,7 +151,7 @@ class AdminControllerTest {
                 .namaMandor("Andi Mandor")
                 .build();
 
-        when(userService.assignMandor(buruhId, mandorId)).thenReturn(mockAssignedBuruh);
+        when(adminService.assignMandor(buruhId, mandorId)).thenReturn(mockAssignedBuruh);
 
         ResponseEntity<ApiResponse<UserResponseDTO>> response =
                 adminController.assignMandor(buruhId, mandorId);
@@ -173,7 +173,7 @@ class AdminControllerTest {
                 .namaMandor(null)
                 .build();
 
-        when(userService.unassignMandor(buruhId)).thenReturn(mockUnassignedBuruh);
+        when(adminService.unassignMandor(buruhId)).thenReturn(mockUnassignedBuruh);
 
         ResponseEntity<ApiResponse<UserResponseDTO>> response =
                 adminController.unassignMandor(buruhId);
@@ -190,7 +190,7 @@ class AdminControllerTest {
         UUID supirId = UUID.randomUUID();
         UUID mandorId = UUID.randomUUID();
 
-        when(userService.assignMandor(supirId, mandorId))
+        when(adminService.assignMandor(supirId, mandorId))
                 .thenThrow(new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH."));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -204,7 +204,7 @@ class AdminControllerTest {
     void unassignMandor_ShouldThrowException_WhenIdNotFound() {
         UUID fiktifId = UUID.randomUUID();
 
-        when(userService.unassignMandor(fiktifId))
+        when(adminService.unassignMandor(fiktifId))
                 .thenThrow(new RuntimeException("Data Buruh tidak ditemukan"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -221,7 +221,7 @@ class AdminControllerTest {
         UUID targetId = UUID.randomUUID();
         Principal mockPrincipal = () -> "admin@sawit.com";
 
-        org.mockito.Mockito.doNothing().when(userService).deleteUser(targetId, "admin@sawit.com");
+        org.mockito.Mockito.doNothing().when(adminService).deleteUser(targetId, "admin@sawit.com");
 
         ResponseEntity<ApiResponse<Object>> response = adminController.deleteUser(targetId, mockPrincipal);
 
@@ -238,7 +238,7 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         org.mockito.Mockito.doThrow(new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri."))
-                .when(userService).deleteUser(targetId, "admin@sawit.com");
+                .when(adminService).deleteUser(targetId, "admin@sawit.com");
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             adminController.deleteUser(targetId, mockPrincipal);
@@ -253,7 +253,7 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         org.mockito.Mockito.doThrow(new RuntimeException("Data pengguna tidak ditemukan"))
-                .when(userService).deleteUser(fiktifId, "admin@sawit.com");
+                .when(adminService).deleteUser(fiktifId, "admin@sawit.com");
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             adminController.deleteUser(fiktifId, mockPrincipal);
@@ -276,7 +276,7 @@ class AdminControllerTest {
                 .build();
 
 
-        when(userService.getUserDetail(targetId)).thenReturn(expectedResponse);
+        when(adminService.getUserDetail(targetId)).thenReturn(expectedResponse);
 
 
         ResponseEntity<ApiResponse<UserResponseDTO>> response = adminController.getUserDetail(targetId);
@@ -290,13 +290,13 @@ class AdminControllerTest {
         assertEquals("Andi Mandor", response.getBody().getData().getNamaMandor());
 
 
-        verify(userService, times(1)).getUserDetail(targetId);
+        verify(adminService, times(1)).getUserDetail(targetId);
     }
 
     @Test
     void getUserDetail_ShouldThrowException_WhenUserNotFound() {
         UUID fiktifId = UUID.randomUUID();
-        when(userService.getUserDetail(fiktifId))
+        when(adminService.getUserDetail(fiktifId))
                 .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
