@@ -18,4 +18,5 @@ public class UserResponseDTO {
     private String email;
     private String role;
     private String nomorSertifikasi; // null if user not mandor
+    private String namaMandor;
 }
