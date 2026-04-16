@@ -81,6 +81,19 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(buruh);
     }
 
+    @Override
+    @Transactional
+    public void deleteUser(UUID targetId, String adminEmail) {
+        User targetUser = userRepository.findById(targetId)
+                .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
+
+        if (targetUser.getEmail().equalsIgnoreCase(adminEmail)) {
+            throw new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri.");
+        }
+
+        userRepository.delete(targetUser);
+    }
+
     private UserResponseDTO convertToResponseDTO(User user) {
         String nomorSertifikasi = null;
 
