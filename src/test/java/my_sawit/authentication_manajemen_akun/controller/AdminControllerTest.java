@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -134,5 +135,81 @@ class AdminControllerTest {
         });
 
         assertEquals("Role tidak valid: HACKER", exception.getMessage());
+    }
+
+    // ASSIGNING BURUH
+
+    @Test
+    void assignMandor_ShouldReturnSuccessResponse() {
+        UUID buruhId = UUID.randomUUID();
+        UUID mandorId = UUID.randomUUID();
+
+        UserResponseDTO mockAssignedBuruh = UserResponseDTO.builder()
+                .fullname("Budi Santoso")
+                .role("BURUH")
+                .namaMandor("Andi Mandor")
+                .build();
+
+        when(userService.assignMandor(buruhId, mandorId)).thenReturn(mockAssignedBuruh);
+
+        ResponseEntity<ApiResponse<UserResponseDTO>> response =
+                adminController.assignMandor(buruhId, mandorId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().getStatusCode());
+        assertEquals("Berhasil menugaskan mandor", response.getBody().getMessage());
+        assertEquals("Andi Mandor", response.getBody().getData().getNamaMandor());
+    }
+
+    @Test
+    void unassignMandor_ShouldReturnSuccessResponse() {
+        UUID buruhId = UUID.randomUUID();
+
+        UserResponseDTO mockUnassignedBuruh = UserResponseDTO.builder()
+                .fullname("Budi Santoso")
+                .role("BURUH")
+                .namaMandor(null)
+                .build();
+
+        when(userService.unassignMandor(buruhId)).thenReturn(mockUnassignedBuruh);
+
+        ResponseEntity<ApiResponse<UserResponseDTO>> response =
+                adminController.unassignMandor(buruhId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().getStatusCode());
+        assertEquals("Berhasil mencopot penugasan mandor", response.getBody().getMessage());
+        assertNull(response.getBody().getData().getNamaMandor());
+    }
+
+    @Test
+    void assignMandor_ShouldThrowException_WhenServiceThrowsError() {
+        UUID supirId = UUID.randomUUID();
+        UUID mandorId = UUID.randomUUID();
+
+        when(userService.assignMandor(supirId, mandorId))
+                .thenThrow(new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH."));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            adminController.assignMandor(supirId, mandorId);
+        });
+
+        assertEquals("Pengguna yang ditugaskan harus memiliki role BURUH.", exception.getMessage());
+    }
+
+    @Test
+    void unassignMandor_ShouldThrowException_WhenIdNotFound() {
+        UUID fiktifId = UUID.randomUUID();
+
+        when(userService.unassignMandor(fiktifId))
+                .thenThrow(new RuntimeException("Data Buruh tidak ditemukan"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            adminController.unassignMandor(fiktifId);
+        });
+
+        assertEquals("Data Buruh tidak ditemukan", exception.getMessage());
     }
 }
