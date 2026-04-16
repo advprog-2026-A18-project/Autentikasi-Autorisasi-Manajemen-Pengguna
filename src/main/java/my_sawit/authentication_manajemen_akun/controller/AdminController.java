@@ -84,4 +84,15 @@ public class AdminController {
                 null
         ));
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getUserDetail(@PathVariable UUID userId) {
+        UserResponseDTO userDetail = userService.getUserDetail(userId);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Berhasil mengambil detail pengguna",
+                userDetail
+        ));
+    }
 }
