@@ -177,7 +177,7 @@ class RefreshTokenServiceImplTest {
                 .build();
 
         when(refreshTokenRepository.findByToken(oldToken)).thenReturn(Optional.of(validRefreshToken));
-        when(jwtUtils.generateToken(userBuruh.getEmail(), roleBuruh.getName())).thenReturn(newAccessToken);
+        when(jwtUtils.generateToken(userBuruh.getEmail(), roleBuruh.getName(), userBuruh.getId().toString())).thenReturn(newAccessToken);
 
         // Act
         my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO result =
@@ -218,7 +218,7 @@ class RefreshTokenServiceImplTest {
                         .build();
 
         when(refreshTokenRepository.findByToken(oldToken)).thenReturn(Optional.of(validRefreshToken));
-        when(jwtUtils.generateToken(userMandor.getEmail(), roleMandor.getName())).thenReturn(newAccessToken);
+        when(jwtUtils.generateToken(userMandor.getEmail(), roleMandor.getName(), userMandor.getId().toString())).thenReturn(newAccessToken);
         when(mandorProfileRepository.findByUser(userMandor)).thenReturn(Optional.of(mandorProfile));
 
         my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO result =
