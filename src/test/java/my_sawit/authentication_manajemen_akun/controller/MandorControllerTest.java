@@ -1,5 +1,6 @@
 package my_sawit.authentication_manajemen_akun.controller;
 
+import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO; // <-- Tambahkan import ini
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.service.MandorService;
@@ -46,10 +47,13 @@ class MandorControllerTest {
 
         List<UserResponseDTO> mockList = List.of(bawahanDTO);
 
-        when(mandorService.getMyBawahan("mandor@sawit.com", null)).thenReturn(mockList);
+        // Buat instance DTO untuk mocking dan request
+        BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
+
+        when(mandorService.getMyBawahan("mandor@sawit.com", requestDTO)).thenReturn(mockList);
 
         ResponseEntity<ApiResponse<List<UserResponseDTO>>> response =
-                mandorController.getMyBawahan(mockPrincipal, null);
+                mandorController.getMyBawahan(mockPrincipal, requestDTO);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -58,16 +62,18 @@ class MandorControllerTest {
         assertEquals(1, response.getBody().getData().size());
         assertEquals("Budi Buruh", response.getBody().getData().get(0).getFullname());
 
-        verify(mandorService, times(1)).getMyBawahan("mandor@sawit.com", null);
+        verify(mandorService, times(1)).getMyBawahan("mandor@sawit.com", requestDTO);
     }
 
     @Test
     void getMyBawahan_ShouldThrowException_WhenNotMandor() {
-        when(mandorService.getMyBawahan("mandor@sawit.com", null))
+        BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
+
+        when(mandorService.getMyBawahan("mandor@sawit.com", requestDTO))
                 .thenThrow(new RuntimeException("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            mandorController.getMyBawahan(mockPrincipal, null);
+            mandorController.getMyBawahan(mockPrincipal, requestDTO);
         });
 
         assertEquals("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan", exception.getMessage());
