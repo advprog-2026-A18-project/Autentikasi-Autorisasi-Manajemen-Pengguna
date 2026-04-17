@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,8 +31,9 @@ class JwtUtilsTest {
     void testGenerateToken_ShouldReturnValidJwtString() {
         String email = "petani@mysawit.com";
         String role = "BURUH";
+        String id = UUID.randomUUID().toString();
 
-        String token = jwtUtils.generateToken(email, role);
+        String token = jwtUtils.generateToken(email, role, id );
 
         assertNotNull(token);
         assertFalse(token.isEmpty());
@@ -47,5 +49,6 @@ class JwtUtilsTest {
 
         assertEquals(email, claims.getSubject());
         assertEquals(role, claims.get("role"));
+        assertEquals(id, claims.get("id"));
     }
 }
