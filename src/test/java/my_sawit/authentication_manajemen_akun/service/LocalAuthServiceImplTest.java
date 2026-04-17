@@ -5,6 +5,7 @@ import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
@@ -41,6 +42,9 @@ class LocalAuthServiceImplTest {
     @Mock
     private JwtUtils jwtUtils;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private LocalAuthServiceImpl authService;
 
@@ -48,6 +52,7 @@ class LocalAuthServiceImplTest {
     private LoginRequestDTO loginReq;
     private User mockUser;
     private Role mockRole;
+    private RefreshToken mockRefreshToken;
 
     @BeforeEach
     void setUp() {
@@ -75,11 +80,12 @@ class LocalAuthServiceImplTest {
                 .email("test@example.com")
                 .password("password123")
                 .build();
+
+        mockRefreshToken = RefreshToken.builder()
+                .token("mock-refresh-token-uuid")
+                .build();
     }
 
-    // ==========================================
-    // TESTS UNTUK REGISTER
-    // ==========================================
 
     @Test
     void register_WhenUsernameExists_ShouldReturn400() {
@@ -131,12 +137,14 @@ class LocalAuthServiceImplTest {
         when(roleRepository.findByName("BURUH")).thenReturn(Optional.of(mockRole));
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
 
         assertEquals(201, response.getStatusCode());
         assertNotNull(response.getData().getAccessToken());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("BURUH", response.getData().getUser().getRole());
         assertNull(response.getData().getUser().getNomorSertifikasi());
         verify(mandorProfileRepository, never()).save(any());
@@ -188,18 +196,17 @@ class LocalAuthServiceImplTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         when(mandorProfileRepository.existsByNomorSertifikasi(anyString())).thenReturn(false);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
 
         assertEquals(201, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("MND123", response.getData().getUser().getNomorSertifikasi());
         verify(mandorProfileRepository, times(1)).save(any(MandorProfile.class));
     }
 
-    // ==========================================
-    // TESTS UNTUK LOGIN
-    // ==========================================
 
     @Test
     void login_WhenUserNotFound_ShouldReturn401() {
@@ -237,12 +244,14 @@ class LocalAuthServiceImplTest {
     void login_SuccessBuruh_ShouldReturn200() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(response.getData().getAccessToken());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertNull(response.getData().getUser().getNomorSertifikasi());
     }
 
@@ -254,11 +263,13 @@ class LocalAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.of(profile));
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);
 
         assertEquals(200, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("MND123", response.getData().getUser().getNomorSertifikasi());
     }
 
@@ -269,11 +280,13 @@ class LocalAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.empty());
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);
 
         assertEquals(200, response.getStatusCode());
+        assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertNull(response.getData().getUser().getNomorSertifikasi());
     }
 }

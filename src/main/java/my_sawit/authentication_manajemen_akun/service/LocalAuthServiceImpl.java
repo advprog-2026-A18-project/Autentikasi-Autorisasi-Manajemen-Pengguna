@@ -7,6 +7,7 @@ import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
@@ -32,6 +33,7 @@ public class LocalAuthServiceImpl implements AuthStrategy {
     private final MandorProfileRepository mandorProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     @Transactional
@@ -74,7 +76,7 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 .role(userRole)
                 .authProvider("LOCAL")
                 .build();
-        userRepository.save(newUser);
+        newUser = userRepository.save(newUser);
 
         if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
             MandorProfile mandorProfile = MandorProfile.builder()
@@ -116,6 +118,8 @@ public class LocalAuthServiceImpl implements AuthStrategy {
     }
 
     private ApiResponse<AuthResponseDTO> buildSuccessResponse(User user, String nomorSertifikasi, String message, int statusCode) {
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
         UserResponseDTO profileDTO = UserResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -123,12 +127,15 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 .email(user.getEmail())
                 .role(user.getRole().getName())
                 .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
                 .build();
 
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         AuthResponseDTO authData = AuthResponseDTO.builder()
                 .accessToken(token)
+                .refreshToken(refreshToken.getToken())
                 .user(profileDTO)
                 .build();
 

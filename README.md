@@ -1,97 +1,175 @@
 
-# Authentikasi-Autorisasi-Manajemen-Pengguna API
 
-## API Reference
-Below are some examples of the API routes that can be used from the project
-#### Register Manual
+## 1. Authentication (`/auth`)
 
+#### Local Register
+```http
+  POST /auth/register
 ```
-  POST /register
-```
-### Request Body
+**Request Body**
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `username` | `string` | **Required**. User name |
 | `fullname` | `string` | **Required**. User fullname |
 | `email` | `string` | **Required**. User email |
 | `password` | `string` | **Required**. User password |
-| `role` | `string` | **Required**. User password |
-| `nomor_sertifikasi` | `string` | **Required (for Mandor)**. User cert_num |
+| `role` | `string` | **Required**. Role (e.g., BURUH, MANDOR) |
+| `nomorSertifikasi` | `string` | **Required (for Mandor)**. Certification number |
 
-### Response
+**Response**
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `statusCode` | `int` | it defines the http code (200, 400, 500, etc) |
-| `message` | `string` | it defines the success/error message|
-| `data` | `map/dictionary/null` | key: {'accessToken','id', 'username', 'fullname', 'email', 'role' } |
+| `statusCode` | `int` | Standard HTTP Status Code (201) |
+| `message` | `string` | Success/error message|
+| `data` | `object` | `{ accessToken, refreshToken, user: {id, username, fullname, email, role, nomorSertifikasi} }` |
 
-#### Login Manual
+#### Local Login
+```http
+  POST /auth/login
 ```
-  POST /login
-```
-### Request Body
+**Request Body**
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `email` | `string` | **Required**. User email |
 | `password` | `string` | **Required**. User password |
 
-### Response
+**Response**
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `statusCode` | `int` | it defines the http code (200, 400, 500, etc) |
-| `message` | `string` | it defines the success/error message|
-| `data` | `map/dictionary/null` | key: {'accessToken','id', 'username', 'fullname', 'email', 'role' } |
+| `statusCode` | `int` | Standard HTTP Status Code (200, 401) |
+| `message` | `string` | Success/error message|
+| `data` | `object` | `{ accessToken, refreshToken, user: {...} }` |
 
-#### Data Pribadi User
+#### Google Login / Register
+```http
+  POST /auth/google
 ```
-  GET /my-data
+**Request Body**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `idToken` | `string` | **Required**. Google ID Token |
+| `role` | `string` | **Optional**. Required if user is new (Register) |
+| `nomorSertifikasi` | `string` | **Optional**. Required if new user is MANDOR |
+
+**Response**
+
+#### Refresh Token
+```http
+  POST /auth/refresh
+```
+**Request Body**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `refreshToken` | `string` | **Required**. Valid Refresh Token |
+
+**Response** *(Returns new accessToken and user data)*
+
+#### Logout
+```http
+  POST /auth/logout
+```
+**Request Body**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `refreshToken` | `string` | **Required**. Refresh Token to be revoked |
+
+---
+
+## 2. User General (`/users`)
+
+**Headers Required (All Routes):**
+`Authorization: Bearer <JWT_ACCESS_TOKEN>`
+
+#### Get My Profile
+```http
+  GET /users/me
+```
+**Response**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `statusCode` | `int` | HTTP Status Code (200) |
+| `message` | `string` | Success message |
+| `data` | `object` | `{ id, username, fullname, email, role, nomorSertifikasi, namaMandor }` |
+
+#### Update My Profile
+```http
+  PUT /users/me
+```
+**Request Body**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `fullname` | `string` | **Required**. New fullname |
+| `username` | `string` | **Required**. New username |
+
+---
+
+## 3. Mandor Operations (`/mandor`)
+
+**Headers Required (All Routes):**
+`Authorization: Bearer <JWT_ACCESS_TOKEN>` *(Must have MANDOR role)*
+
+#### Get Daftar Bawahan
+```http
+  GET /mandor/bawahan
+```
+**Query Parameters (Optional)**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `name` | `string` | Filter bawahan by name |
+
+**Response**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `data` | `array` | List of User objects: `[{ id, username, fullname, email, role }]` |
+
+---
+
+## 4. Admin Management (`/admin/users`)
+
+**Headers Required (All Routes):**
+`Authorization: Bearer <JWT_ACCESS_TOKEN>` *(Must have ADMIN role)*
+
+#### Search & List All Users
+```http
+  GET /admin/users
+```
+**Query Parameters (Optional)**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `name` | `string` | Filter by fullname |
+| `email` | `string` | Filter by email |
+| `role` | `string` | Filter by role |
+| `page` | `int` | Page number (Default: 0) |
+| `size` | `int` | Elements per page (Default: 10) |
+
+**Response**
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `data` | `object` | Paging Object: `{ content: [...], currentPage, totalPages, totalElements }` |
+
+#### Get User Detail
+```http
+  GET /admin/users/{userId}
+```
+*Returns full details of a specific user by UUID.*
+
+#### Assign Mandor to Buruh
+```http
+  PUT /admin/users/{buruhId}/assign-mandor/{mandorId}
 ```
 
-### Request Headers
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. Bearer <JWT_ACCESS_TOKEN> |
-
-
-### Request Body
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `id` | `string` | **Required**. User id |
-
-### Response
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `statusCode` | `int` | it defines the http code (200, 400, 500, etc) |
-| `message` | `string` | it defines the success/error message|
-| `data` | `map/dictionary/null` | key: {'id', 'username', 'fullname', 'email', 'role' } |
-
-
-#### Data Bawahan
-```
-  GET /my-bawahan
+#### Unassign Mandor from Buruh
+```http
+  PUT /admin/users/{buruhId}/unassign-mandor
 ```
 
-### Request Headers
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. Bearer <JWT_ACCESS_TOKEN> |
+#### Delete User
+```http
+  DELETE /admin/users/{userId}
+```
 
-
-### Request Body
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `id` | `string` | **Required**. User id |
-
-### Response
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `statusCode` | `int` | it defines the http code (200, 400, 500, etc) |
-| `message` | `string` | it defines the success/error message|
-| `data` | `array/list/null` | key: [{'id', 'username', 'fullname', 'email', 'role' }] |
-
-
+---
 
 ## Authors
 
 - [@evanhwz](https://www.github.com/evanhwz)
-

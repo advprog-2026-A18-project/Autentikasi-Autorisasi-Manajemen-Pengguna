@@ -41,8 +41,8 @@ public class User {
     private String authProvider = "LOCAL";
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supervisor_id")
-    private User supervisor;
+    @JoinColumn(name = "mandor_id")
+    private User mandor;
 
 
 }
