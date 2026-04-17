@@ -51,11 +51,15 @@ class RefreshTokenServiceImplTest {
                 .email("burhan@sawit.com")
                 .build();
         refreshTokenService = new RefreshTokenServiceImpl(
-                604800000L,
                 refreshTokenRepository,
                 userRepository,
                 jwtUtils,
                 mandorProfileRepository
+        );
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                refreshTokenService,
+                "refreshTokenDuration",
+                604800000L
         );
     }
 
