@@ -34,4 +34,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findByMandor(User mandor);
 
+    List<User> findByMandorAndFullnameContainingIgnoreCase(User mandor, String fullname);
+
 }
