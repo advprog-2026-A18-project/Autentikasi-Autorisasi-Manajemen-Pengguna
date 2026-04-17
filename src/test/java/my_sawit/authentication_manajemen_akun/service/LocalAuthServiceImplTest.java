@@ -137,7 +137,7 @@ class LocalAuthServiceImplTest {
         when(roleRepository.findByName("BURUH")).thenReturn(Optional.of(mockRole));
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
@@ -196,7 +196,7 @@ class LocalAuthServiceImplTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         when(mandorProfileRepository.existsByNomorSertifikasi(anyString())).thenReturn(false);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
@@ -244,7 +244,7 @@ class LocalAuthServiceImplTest {
     void login_SuccessBuruh_ShouldReturn200() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);
@@ -263,7 +263,7 @@ class LocalAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.of(profile));
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);
@@ -280,7 +280,7 @@ class LocalAuthServiceImplTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.empty());
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("mockJwtToken");
+        when(jwtUtils.generateToken(anyString(), anyString(), anyString())).thenReturn("mockJwtToken");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.login(loginReq);

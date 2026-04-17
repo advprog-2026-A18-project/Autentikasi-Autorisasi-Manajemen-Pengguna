@@ -115,7 +115,7 @@ class GoogleAuthServiceImplTest {
     void authenticate_LoginSuccess_AsBuruh_ShouldReturn200() throws Exception {
         mockGoogleTokenSuccess();
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(jwtUtils.generateToken(anyString(), anyString(),anyString())).thenReturn("jwt-token");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
@@ -134,7 +134,7 @@ class GoogleAuthServiceImplTest {
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.of(profile));
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(jwtUtils.generateToken(anyString(), anyString(),anyString())).thenReturn("jwt-token");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
@@ -151,7 +151,7 @@ class GoogleAuthServiceImplTest {
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         when(mandorProfileRepository.findByUser(mockUser)).thenReturn(Optional.empty());
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(jwtUtils.generateToken(anyString(), anyString(),anyString())).thenReturn("jwt-token");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
@@ -242,7 +242,7 @@ class GoogleAuthServiceImplTest {
         when(roleRepository.findByName("MANDOR")).thenReturn(Optional.of(mockRole));
         when(mandorProfileRepository.existsByNomorSertifikasi(anyString())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(jwtUtils.generateToken(anyString(), anyString(),anyString())).thenReturn("jwt-token");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
@@ -261,7 +261,7 @@ class GoogleAuthServiceImplTest {
 
         when(roleRepository.findByName("BURUH")).thenReturn(Optional.of(mockRole));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtUtils.generateToken(anyString(), anyString())).thenReturn("jwt-token");
+        when(jwtUtils.generateToken(anyString(), anyString(),anyString())).thenReturn("jwt-token");
         when(refreshTokenService.createRefreshToken(any())).thenReturn(mockRefreshToken);
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
