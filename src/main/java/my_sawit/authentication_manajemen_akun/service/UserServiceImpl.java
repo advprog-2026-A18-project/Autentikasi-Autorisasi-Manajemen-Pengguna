@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
 
-        if (!user.getUsername().equals(request.getUsername())) {
+        if (!request.getUsername().equals(user.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
                 throw new IllegalArgumentException("Username sudah digunakan oleh pengguna lain");
             }
