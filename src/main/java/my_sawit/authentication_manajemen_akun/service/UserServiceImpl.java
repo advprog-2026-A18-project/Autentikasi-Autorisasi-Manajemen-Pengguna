@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.model.User;
@@ -27,6 +28,25 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(user);
     }
 
+    @Override
+    @Transactional
+    public UserResponseDTO updateMyProfile(String email, UserUpdateRequestDTO request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
+
+        if (!user.getUsername().equals(request.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new IllegalArgumentException("Username sudah digunakan oleh pengguna lain");
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        user.setFullname(request.getFullname());
+
+        User updatedUser = userRepository.save(user);
+
+        return convertToResponseDTO(updatedUser);
+    }
 
     private UserResponseDTO convertToResponseDTO(User user) {
         String nomorSertifikasi = null;
