@@ -132,6 +132,8 @@ public class GoogleAuthServiceImpl {
     }
 
     private ApiResponse<AuthResponseDTO> buildSuccessResponse(User user, String nomorSertifikasi) {
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
         UserResponseDTO profileDTO = UserResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -139,9 +141,10 @@ public class GoogleAuthServiceImpl {
                 .email(user.getEmail())
                 .role(user.getRole().getName())
                 .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
                 .build();
 
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         AuthResponseDTO authData = AuthResponseDTO.builder()

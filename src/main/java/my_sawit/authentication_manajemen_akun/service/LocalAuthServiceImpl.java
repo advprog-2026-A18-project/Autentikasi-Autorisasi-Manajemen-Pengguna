@@ -76,7 +76,7 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 .role(userRole)
                 .authProvider("LOCAL")
                 .build();
-        userRepository.save(newUser);
+        newUser = userRepository.save(newUser);
 
         if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
             MandorProfile mandorProfile = MandorProfile.builder()
@@ -118,6 +118,8 @@ public class LocalAuthServiceImpl implements AuthStrategy {
     }
 
     private ApiResponse<AuthResponseDTO> buildSuccessResponse(User user, String nomorSertifikasi, String message, int statusCode) {
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
         UserResponseDTO profileDTO = UserResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -125,9 +127,10 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 .email(user.getEmail())
                 .role(user.getRole().getName())
                 .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
                 .build();
 
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         AuthResponseDTO authData = AuthResponseDTO.builder()

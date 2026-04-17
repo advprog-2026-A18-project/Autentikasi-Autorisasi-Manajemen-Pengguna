@@ -6,7 +6,6 @@ import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.User;
@@ -84,7 +83,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .map(RefreshToken::getUser)
                 .map(user -> {
 
-                    String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+                    String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
 
                     String nomorSertifikasi = null;
                     if ("MANDOR".equalsIgnoreCase(user.getRole().getName())) {
@@ -93,6 +92,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                             nomorSertifikasi = mandorProfile.get().getNomorSertifikasi();
                         }
                     }
+                    String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
 
                     UserResponseDTO profileDTO = UserResponseDTO.builder()
                             .id(user.getId())
@@ -101,6 +101,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                             .email(user.getEmail())
                             .role(user.getRole().getName())
                             .nomorSertifikasi(nomorSertifikasi)
+                            .namaMandor(namaMandor)
                             .build();
 
                     return AuthResponseDTO.builder()
