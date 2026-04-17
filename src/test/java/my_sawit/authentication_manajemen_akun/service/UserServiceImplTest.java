@@ -1,5 +1,6 @@
 package my_sawit.authentication_manajemen_akun.service;
 
+import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.model.Role;
@@ -44,12 +45,14 @@ class UserServiceImplTest {
                 .id(UUID.randomUUID())
                 .email("mandor@sawit.com")
                 .fullname("Andi Mandor")
+                .username("andi_mandor")
                 .role(mandorRole)
                 .build();
 
         mockBuruh = User.builder()
                 .id(UUID.randomUUID())
                 .email("buruh@sawit.com")
+                .username("budi_buruh")
                 .fullname("Budi Buruh")
                 .role(buruhRole)
                 .mandor(mockMandor)
