@@ -35,16 +35,10 @@ repositories {
     mavenCentral()
 }
 
-// ==========================================
-// 1. Variabel Versi (Menyelesaikan Hardcode)
-// ==========================================
 val jjwtVersion = "0.12.6"
 val dotenvVersion = "4.0.0"
 val googleApiClientVersion = "2.4.1"
 
-// ==========================================
-// 2. Grouping Dependencies (Rapi dan Terstruktur)
-// ==========================================
 dependencies {
     // --- IMPLEMENTATION ---
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -71,6 +65,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // --- TEST RUNTIME ONLY ---
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
