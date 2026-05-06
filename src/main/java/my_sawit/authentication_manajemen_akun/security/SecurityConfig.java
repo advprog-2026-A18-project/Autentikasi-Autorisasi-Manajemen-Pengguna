@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/internal/**").permitAll()
                         // testing aja
                         //.requestMatchers("/test-google.html").permitAll()
                         .anyRequest().authenticated()
