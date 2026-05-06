@@ -39,6 +39,10 @@ val jjwtVersion = "0.12.6"
 val dotenvVersion = "4.0.0"
 val googleApiClientVersion = "2.4.1"
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 dependencies {
     // --- IMPLEMENTATION ---
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
