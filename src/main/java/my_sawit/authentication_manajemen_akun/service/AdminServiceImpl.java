@@ -2,8 +2,7 @@ package my_sawit.authentication_manajemen_akun.service;
 
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.helper.ConvertHandler;
-import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.repository.RefreshTokenRepository;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,7 +41,7 @@ public class AdminServiceImpl implements AdminService {
 
         Page<User> usersPage = userRepository.searchUsers(name, email, role, pageable);
 
-        return usersPage.map(user -> ConvertHandler.convertToResponseDTO(user, mandorProfileRepository));
+        return usersPage.map(user -> ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository));
     }
 
     @Override
@@ -65,7 +63,7 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(mandor);
         userRepository.save(buruh);
-        return ConvertHandler.convertToResponseDTO(buruh, mandorProfileRepository);
+        return ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
     }
 
     @Override
@@ -80,7 +78,7 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(null);
         userRepository.save(buruh);
-        return ConvertHandler.convertToResponseDTO(buruh, mandorProfileRepository);
+        return ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
     }
 
     @Override
@@ -119,7 +117,7 @@ public class AdminServiceImpl implements AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
 
-        return ConvertHandler.convertToResponseDTO(user, mandorProfileRepository);
+        return ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
     }
 
 
