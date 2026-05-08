@@ -3,6 +3,7 @@ package my_sawit.authentication_manajemen_akun.service;
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
+import my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -37,18 +38,9 @@ public class MandorServiceImpl implements MandorService {
         }
 
         return bawahanList.stream()
-                .map(this::convertToResponseDTO)
+                .map(ConvertResponseHandler::convertToUserResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    private UserResponseDTO convertToResponseDTO(User user) {
-        return UserResponseDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .fullname(user.getFullname())
-                .email(user.getEmail())
-                .role(user.getRole() != null ? user.getRole().getName() : null)
-                .namaMandor(user.getMandor() != null ? user.getMandor().getFullname() : null)
-                .build();
-    }
+
 }
