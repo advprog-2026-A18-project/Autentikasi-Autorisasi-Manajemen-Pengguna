@@ -5,9 +5,7 @@ import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
-import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.Role;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
@@ -24,7 +22,7 @@ import static my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandl
 
 @Service
 @RequiredArgsConstructor
-public class LocalAuthServiceImpl implements AuthStrategy {
+public class LocalAuthServiceImpl implements LocalAuthService {
 
 
     private static final String ROLE_MANDOR = "MANDOR";
