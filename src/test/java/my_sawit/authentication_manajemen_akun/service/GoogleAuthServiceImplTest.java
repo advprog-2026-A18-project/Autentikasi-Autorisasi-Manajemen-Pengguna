@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -101,7 +102,7 @@ class GoogleAuthServiceImplTest {
 
     @Test
     void authenticate_WhenGoogleThrowsException_ShouldReturn500() throws Exception {
-        doThrow(new RuntimeException("Google API Error")).when(authService).verifyGoogleToken(anyString());
+        doThrow(new IOException("Google API Error")).when(authService).verifyGoogleToken(anyString());
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
@@ -196,7 +197,7 @@ class GoogleAuthServiceImplTest {
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
-        assertEquals(500, response.getStatusCode());
+        assertEquals(400, response.getStatusCode());
         assertTrue(response.getMessage().contains("Role invalid: INVALID_ROLE"));
     }
 
@@ -247,7 +248,7 @@ class GoogleAuthServiceImplTest {
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
-        assertEquals(200, response.getStatusCode());
+        assertEquals(201, response.getStatusCode());
         verify(mandorProfileRepository, times(1)).save(any(MandorProfile.class));
         assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("MND123", response.getData().getUser().getNomorSertifikasi());
@@ -266,7 +267,7 @@ class GoogleAuthServiceImplTest {
 
         ApiResponse<AuthResponseDTO> response = authService.authenticate(request);
 
-        assertEquals(200, response.getStatusCode());
+        assertEquals(201, response.getStatusCode());
         verify(mandorProfileRepository, never()).save(any());
         assertEquals("mock-refresh-token-uuid", response.getData().getRefreshToken());
         assertEquals("BURUH", response.getData().getUser().getRole());
