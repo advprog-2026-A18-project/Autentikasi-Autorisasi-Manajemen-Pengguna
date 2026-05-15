@@ -1,9 +1,13 @@
 package my_sawit.authentication_manajemen_akun.helper;
 
+import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
+import my_sawit.authentication_manajemen_akun.service.RefreshTokenService;
 
 import java.util.Optional;
 
@@ -44,6 +48,34 @@ public class ConvertResponseHandler {
                 .role(user.getRole() != null ? user.getRole().getName() : null)
                 .nomorSertifikasi(null)
                 .namaMandor(namaMandor)
+                .build();
+    }
+
+    public static AuthResponseDTO convertToAuthResponseDTO(
+            User user,
+            String nomorSertifikasi,
+            RefreshTokenService refreshTokenService,
+            JwtUtils jwtUtils
+    ) {
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
+        UserResponseDTO profileDTO = UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
+                .build();
+
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+        return AuthResponseDTO.builder()
+                .accessToken(token)
+                .refreshToken(refreshToken.getToken())
+                .user(profileDTO)
                 .build();
     }
 }
