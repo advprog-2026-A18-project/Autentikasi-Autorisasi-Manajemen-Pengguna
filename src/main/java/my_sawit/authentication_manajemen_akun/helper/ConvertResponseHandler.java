@@ -7,7 +7,7 @@ import my_sawit.authentication_manajemen_akun.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
-import my_sawit.authentication_manajemen_akun.service.RefreshTokenService;
+import my_sawit.authentication_manajemen_akun.auth.service.RefreshTokenService;
 
 import java.util.Optional;
 

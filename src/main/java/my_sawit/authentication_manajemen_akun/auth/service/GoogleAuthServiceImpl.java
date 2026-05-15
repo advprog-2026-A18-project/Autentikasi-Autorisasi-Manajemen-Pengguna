@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.service;
+package my_sawit.authentication_manajemen_akun.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;

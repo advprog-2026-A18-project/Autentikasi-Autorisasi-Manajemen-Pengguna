@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.service;
+package my_sawit.authentication_manajemen_akun.auth.service;
 
 
 import my_sawit.authentication_manajemen_akun.model.RefreshToken;
@@ -10,7 +10,6 @@ import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

@@ -1,12 +1,12 @@
-package my_sawit.authentication_manajemen_akun.controller;
+package my_sawit.authentication_manajemen_akun.auth.controller;
 
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.LocalAuthService;
-import my_sawit.authentication_manajemen_akun.service.OAuthService;
+import my_sawit.authentication_manajemen_akun.auth.service.LocalAuthService;
+import my_sawit.authentication_manajemen_akun.auth.service.OAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
