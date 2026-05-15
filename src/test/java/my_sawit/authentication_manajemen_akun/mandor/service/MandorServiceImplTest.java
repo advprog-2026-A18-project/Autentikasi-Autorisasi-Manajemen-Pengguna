@@ -2,9 +2,9 @@ package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO; // <-- Tambahkan import ini
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.model.Role;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.domain.model.Role;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

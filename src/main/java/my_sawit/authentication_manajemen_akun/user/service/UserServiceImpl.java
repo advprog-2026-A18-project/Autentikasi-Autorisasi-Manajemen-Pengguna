@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
-import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

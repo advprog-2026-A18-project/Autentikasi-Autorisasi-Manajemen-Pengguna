@@ -2,10 +2,10 @@ package my_sawit.authentication_manajemen_akun.common.seeder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import my_sawit.authentication_manajemen_akun.model.Role;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.repository.RoleRepository;
-import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.domain.model.Role;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.RoleRepository;
+import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;

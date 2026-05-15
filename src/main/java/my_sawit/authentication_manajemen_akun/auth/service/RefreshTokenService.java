@@ -1,7 +1,7 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.model.RefreshToken;
+import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
 
 import java.util.Optional;
 import java.util.UUID;

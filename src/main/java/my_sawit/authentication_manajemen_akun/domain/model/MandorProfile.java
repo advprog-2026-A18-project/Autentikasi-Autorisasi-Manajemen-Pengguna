@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.model;
+package my_sawit.authentication_manajemen_akun.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;

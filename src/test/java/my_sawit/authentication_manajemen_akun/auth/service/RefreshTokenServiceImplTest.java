@@ -1,11 +1,13 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 
-import my_sawit.authentication_manajemen_akun.model.RefreshToken;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
-import my_sawit.authentication_manajemen_akun.repository.RefreshTokenRepository;
-import my_sawit.authentication_manajemen_akun.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.domain.model.Role;
+import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.domain.repository.RefreshTokenRepository;
+import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -163,8 +165,8 @@ class RefreshTokenServiceImplTest {
         String oldToken = "old-refresh-token";
         String newAccessToken = "new-access-token-jwt";
 
-        my_sawit.authentication_manajemen_akun.model.Role roleBuruh =
-                new my_sawit.authentication_manajemen_akun.model.Role();
+        Role roleBuruh =
+                new Role();
         roleBuruh.setName("BURUH");
 
         User userBuruh = User.builder()
@@ -199,8 +201,8 @@ class RefreshTokenServiceImplTest {
         String oldToken = "old-refresh-token";
         String newAccessToken = "new-access-token-jwt";
 
-        my_sawit.authentication_manajemen_akun.model.Role roleMandor =
-                new my_sawit.authentication_manajemen_akun.model.Role();
+        Role roleMandor =
+                new Role();
         roleMandor.setName("MANDOR");
 
         User userMandor = User.builder()
@@ -215,8 +217,8 @@ class RefreshTokenServiceImplTest {
                 .expiryDate(Instant.now().plusSeconds(1000))
                 .build();
 
-        my_sawit.authentication_manajemen_akun.model.MandorProfile mandorProfile =
-                my_sawit.authentication_manajemen_akun.model.MandorProfile.builder()
+        MandorProfile mandorProfile =
+                MandorProfile.builder()
                         .nomorSertifikasi("MNDR-12345")
                         .build();
 

@@ -1,6 +1,6 @@
-package my_sawit.authentication_manajemen_akun.repository;
+package my_sawit.authentication_manajemen_akun.domain.repository;
 
-import my_sawit.authentication_manajemen_akun.model.User;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

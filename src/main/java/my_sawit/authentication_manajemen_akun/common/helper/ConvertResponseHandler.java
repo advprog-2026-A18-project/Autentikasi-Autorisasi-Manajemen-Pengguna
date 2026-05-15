@@ -2,10 +2,10 @@ package my_sawit.authentication_manajemen_akun.common.helper;
 
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.model.MandorProfile;
-import my_sawit.authentication_manajemen_akun.model.RefreshToken;
-import my_sawit.authentication_manajemen_akun.model.User;
-import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
+import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import my_sawit.authentication_manajemen_akun.auth.service.RefreshTokenService;
 
