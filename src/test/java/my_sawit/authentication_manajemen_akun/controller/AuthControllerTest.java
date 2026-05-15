@@ -5,8 +5,9 @@ import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.AuthStrategy;
+import my_sawit.authentication_manajemen_akun.service.LocalAuthService;
 import my_sawit.authentication_manajemen_akun.service.GoogleAuthServiceImpl;
+import my_sawit.authentication_manajemen_akun.service.OAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,10 +26,10 @@ import static org.mockito.Mockito.when;
 class AuthControllerTest {
 
     @Mock
-    private AuthStrategy authStrategy;
+    private LocalAuthService localAuthService;
 
     @Mock
-    private GoogleAuthServiceImpl googleAuthService;
+    private OAuthService<GoogleAuthRequestDTO> googleAuthService;
 
     @InjectMocks
     private AuthController authController;
@@ -47,7 +48,7 @@ class AuthControllerTest {
     void testRegister_ShouldReturn201() {
         RegisterRequestDTO request = new RegisterRequestDTO();
         ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(201, "Registration succeed", dummyAuthData);
-        when(authStrategy.register(any(RegisterRequestDTO.class))).thenReturn(mockResponse);
+        when(localAuthService.register(any(RegisterRequestDTO.class))).thenReturn(mockResponse);
 
 
         ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.register(request);
@@ -62,7 +63,7 @@ class AuthControllerTest {
     void testLogin_ShouldReturn200() {
         LoginRequestDTO request = new LoginRequestDTO();
         ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(200, "Login succeed", dummyAuthData);
-        when(authStrategy.login(any(LoginRequestDTO.class))).thenReturn(mockResponse);
+        when(localAuthService.login(any(LoginRequestDTO.class))).thenReturn(mockResponse);
 
         ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.login(request);
 
