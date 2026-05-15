@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.UUID;
 
-import static my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler.convertToAuthResponseDTO;
+import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
 
 @Slf4j
 @Service

@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.seeder;
+package my_sawit.authentication_manajemen_akun.common.seeder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

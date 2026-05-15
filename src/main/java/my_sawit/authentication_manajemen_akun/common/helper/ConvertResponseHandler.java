@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.helper;
+package my_sawit.authentication_manajemen_akun.common.helper;
 
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;

@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.exception;
+package my_sawit.authentication_manajemen_akun.common.exception;
 
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;

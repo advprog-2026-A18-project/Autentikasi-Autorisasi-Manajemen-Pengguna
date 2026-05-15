@@ -3,7 +3,7 @@ package my_sawit.authentication_manajemen_akun.user.service;
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler;
+import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.model.User;
 import my_sawit.authentication_manajemen_akun.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.repository.UserRepository;

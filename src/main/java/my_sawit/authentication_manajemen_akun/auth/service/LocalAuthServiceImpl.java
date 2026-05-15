@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import static my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler.convertToAuthResponseDTO;
+import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
 
 @Service
 @RequiredArgsConstructor
