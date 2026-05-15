@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.controller;
+package my_sawit.authentication_manajemen_akun.internal.controller;
 
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
