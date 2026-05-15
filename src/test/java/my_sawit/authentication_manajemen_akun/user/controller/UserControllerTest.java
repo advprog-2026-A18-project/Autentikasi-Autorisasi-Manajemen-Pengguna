@@ -1,9 +1,9 @@
-package my_sawit.authentication_manajemen_akun.controller;
+package my_sawit.authentication_manajemen_akun.user.controller;
 
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.UserService;
+import my_sawit.authentication_manajemen_akun.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

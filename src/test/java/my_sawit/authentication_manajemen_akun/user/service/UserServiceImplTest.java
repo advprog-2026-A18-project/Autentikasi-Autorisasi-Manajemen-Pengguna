@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.service;
+package my_sawit.authentication_manajemen_akun.user.service;
 
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
