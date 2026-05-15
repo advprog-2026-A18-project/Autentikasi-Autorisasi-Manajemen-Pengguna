@@ -6,7 +6,6 @@ import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.service.LocalAuthService;
-import my_sawit.authentication_manajemen_akun.service.GoogleAuthServiceImpl;
 import my_sawit.authentication_manajemen_akun.service.OAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
