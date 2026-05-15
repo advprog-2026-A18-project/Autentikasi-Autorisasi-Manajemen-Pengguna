@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.service;
+package my_sawit.authentication_manajemen_akun.admin.service;
 
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import org.springframework.data.domain.Page;

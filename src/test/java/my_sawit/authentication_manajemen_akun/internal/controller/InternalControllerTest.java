@@ -1,7 +1,7 @@
 package my_sawit.authentication_manajemen_akun.controller;
 
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.service.AdminService;
+import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
