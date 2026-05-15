@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.controller;
+package my_sawit.authentication_manajemen_akun.internal.controller;
 
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.UserSearchRequestDTO;
