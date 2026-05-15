@@ -1,4 +1,4 @@
-package my_sawit.authentication_manajemen_akun.service;
+package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO;
