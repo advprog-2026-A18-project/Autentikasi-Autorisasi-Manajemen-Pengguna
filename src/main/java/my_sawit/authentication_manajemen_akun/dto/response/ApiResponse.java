@@ -12,5 +12,41 @@ import lombok.NoArgsConstructor;
 public class ApiResponse<T> {
     private int statusCode;
     private String message;
-    private T data; // isinya adalah AuthResponseDTO dan sejenisnya
+    private T data;
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return of(ApiResponseStatus.SUCCESS, message, data);
+    }
+
+    public static <T> ApiResponse<T> created(String message, T data) {
+        return of(ApiResponseStatus.CREATED, message, data);
+    }
+
+    public static <T> ApiResponse<T> badRequest(String message) {
+        return of(ApiResponseStatus.BAD_REQUEST, message, null);
+    }
+
+    public static <T> ApiResponse<T> unauthorized(String message) {
+        return of(ApiResponseStatus.UNAUTHORIZED, message, null);
+    }
+
+    public static <T> ApiResponse<T> forbidden(String message) {
+        return of(ApiResponseStatus.FORBIDDEN, message, null);
+    }
+
+    public static <T> ApiResponse<T> notFound(String message) {
+        return of(ApiResponseStatus.NOT_FOUND, message, null);
+    }
+
+    public static <T> ApiResponse<T> internalServerError(String message) {
+        return of(ApiResponseStatus.INTERNAL_SERVER_ERROR, message, null);
+    }
+
+    public static <T> ApiResponse<T> of(ApiResponseStatus status, String message, T data) {
+        return new ApiResponse<>(
+                status.getCode(),
+                message != null ? message : status.getDefaultMessage(),
+                data
+        );
+    }
 }
