@@ -31,7 +31,7 @@ import static my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandl
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GoogleAuthServiceImpl {
+public class GoogleAuthServiceImpl implements OAuthService<GoogleAuthRequestDTO> {
 
     private static final String ROLE_MANDOR = "MANDOR";
     private static final String ROLE_ADMIN = "ADMIN";
@@ -57,7 +57,7 @@ public class GoogleAuthServiceImpl {
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-            String username = email.split("@")[0] + "_" + UUID.randomUUID().toString().substring(0, 8);;
+            String username = email.split("@")[0] + "_" + UUID.randomUUID().toString().substring(0, 8);
 
             Optional<User> userOptional = userRepository.findByEmail(email);
 
@@ -73,7 +73,7 @@ public class GoogleAuthServiceImpl {
                 return registerNewGoogleUser(request, email, name, username);
             }
 
-        } catch (Exception e) {
+        } catch (GeneralSecurityException | IOException e) {
             log.error("Error while verification Google Token: ", e);
             return ApiResponse.internalServerError("Error while verification Google Token: " + e.getMessage());
         }
