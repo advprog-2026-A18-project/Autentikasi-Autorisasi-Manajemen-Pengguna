@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import static my_sawit.authentication_manajemen_akun.helper.ConvertResponseHandler.convertToAuthResponseDTO;
+
 @Service
 @RequiredArgsConstructor
 public class LocalAuthServiceImpl implements AuthStrategy {
@@ -32,23 +34,23 @@ public class LocalAuthServiceImpl implements AuthStrategy {
     private final RoleRepository roleRepository;
     private final MandorProfileRepository mandorProfileRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
+    private final JwtUtils jwtUtils;
 
     @Override
     @Transactional
     public ApiResponse<AuthResponseDTO> register(RegisterRequestDTO request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            return new ApiResponse<>(400, "Username is already used", null);
+            return ApiResponse.badRequest("Username is already used");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            return new ApiResponse<>(400, "Email is already registered", null);
+            return ApiResponse.badRequest("Email is already registered");
         }
 
         if (ROLE_ADMIN.equalsIgnoreCase(request.getRole())) {
-            return new ApiResponse<>(403, "Registration as ADMIN is not allowed", null);
+            return ApiResponse.forbidden("Registration as ADMIN is not allowed");
         }
 
 
@@ -60,10 +62,10 @@ public class LocalAuthServiceImpl implements AuthStrategy {
 
         if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
             if (request.getNomorSertifikasi() == null || request.getNomorSertifikasi().isBlank()) {
-                return new ApiResponse<>(400, "Mandor must fill Nomor Sertifikasi", null);
+                return ApiResponse.badRequest("Mandor must fill Nomor Sertifikasi");
             }
             if (mandorProfileRepository.existsByNomorSertifikasi(request.getNomorSertifikasi())) {
-                return new ApiResponse<>(400, "Nomor Sertifikasi is already registered", null);
+                return ApiResponse.badRequest("Nomor Sertifikasi is already registered");
             }
             nomorSertifikasi = request.getNomorSertifikasi();
         }
@@ -85,24 +87,24 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                     .build();
             mandorProfileRepository.save(mandorProfile);
         }
-
-        return buildSuccessResponse(newUser, nomorSertifikasi, "Registration succeed, You are authenticated", 201);
+        AuthResponseDTO authData = convertToAuthResponseDTO(newUser, nomorSertifikasi, refreshTokenService, jwtUtils);
+        return ApiResponse.created("Registration succeed, You are authenticated", authData);
     }
 
     @Override
     public ApiResponse<AuthResponseDTO> login(LoginRequestDTO request) {
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
         if (userOptional.isEmpty()) {
-            return new ApiResponse<>(401, "Incorrect email or password", null);
+            return ApiResponse.unauthorized("Incorrect email or password");
         }
 
         User user = userOptional.get();
         if (user.getPassword() == null) {
-            return new ApiResponse<>(400, "Please check whether you logged in with Google Auth", null);
+            return ApiResponse.badRequest("Please check whether you logged in with Google Auth");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new ApiResponse<>(401, "Incorrect email or password", null);
+            return ApiResponse.unauthorized("Incorrect email or password");
         }
 
         String nomorSertifikasi = null;
@@ -113,32 +115,9 @@ public class LocalAuthServiceImpl implements AuthStrategy {
                 nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
             }
         }
-
-        return buildSuccessResponse(user, nomorSertifikasi, "Login succeed! You are authenticated", 200);
+        AuthResponseDTO authData = convertToAuthResponseDTO(user, nomorSertifikasi, refreshTokenService, jwtUtils);
+        return ApiResponse.success("Login succeed! You are authenticated", authData);
     }
 
-    private ApiResponse<AuthResponseDTO> buildSuccessResponse(User user, String nomorSertifikasi, String message, int statusCode) {
-        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
 
-        UserResponseDTO profileDTO = UserResponseDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .fullname(user.getFullname())
-                .email(user.getEmail())
-                .role(user.getRole().getName())
-                .nomorSertifikasi(nomorSertifikasi)
-                .namaMandor(namaMandor)
-                .build();
-
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-        AuthResponseDTO authData = AuthResponseDTO.builder()
-                .accessToken(token)
-                .refreshToken(refreshToken.getToken())
-                .user(profileDTO)
-                .build();
-
-        return new ApiResponse<>(statusCode, message, authData);
-    }
 }
