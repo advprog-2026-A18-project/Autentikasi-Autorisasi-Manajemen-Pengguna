@@ -3,7 +3,6 @@ package my_sawit.authentication_manajemen_akun.admin.service;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 

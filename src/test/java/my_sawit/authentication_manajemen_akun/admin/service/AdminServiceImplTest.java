@@ -316,7 +316,7 @@ class AdminServiceImplTest {
             userService.assignMandor(fiktifId, mandorId);
         });
 
-        assertEquals("Data Buruh tidak ditemukan", exception.getMessage());
+        assertEquals("Data Buruh not found", exception.getMessage());
     }
 
     @Test
@@ -331,7 +331,7 @@ class AdminServiceImplTest {
             userService.assignMandor(buruhId, fiktifId);
         });
 
-        assertEquals("Data Mandor tidak ditemukan", exception.getMessage());
+        assertEquals("Data Mandor not found", exception.getMessage());
     }
 
     @Test
@@ -346,7 +346,7 @@ class AdminServiceImplTest {
             userService.assignMandor(supirId, mandorId);
         });
 
-        assertEquals("Pengguna yang ditugaskan harus memiliki role BURUH.", exception.getMessage());
+        assertEquals("The user who will be assigned has to have BURUH role.", exception.getMessage());
     }
 
     @Test
@@ -361,7 +361,7 @@ class AdminServiceImplTest {
             userService.assignMandor(buruhId, atasanId);
         });
 
-        assertEquals("Target atasan harus memiliki role MANDOR.", exception.getMessage());
+        assertEquals("The boss who will be assigned has to have MANDOR role.", exception.getMessage());
     }
 
 
@@ -390,7 +390,7 @@ class AdminServiceImplTest {
             userService.unassignMandor(targetId);
         });
 
-        assertEquals("Hanya role BURUH yang dapat dicopot penugasannya.", exception.getMessage());
+        assertEquals("Only users with BURUH role can be unassigned.", exception.getMessage());
     }
 
     // delete-by-admin
@@ -450,7 +450,7 @@ class AdminServiceImplTest {
             userService.deleteUser(targetId, currentAdminEmail);
         });
 
-        assertEquals("Admin tidak dapat menghapus dirinya sendiri.", exception.getMessage());
+        assertEquals("Admin can't be deleted.", exception.getMessage());
 
         verify(userRepository, never()).deleteById(any());
     }
@@ -466,7 +466,7 @@ class AdminServiceImplTest {
             userService.deleteUser(targetId, currentAdminEmail);
         });
 
-        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+        assertEquals("User data not found", exception.getMessage());
     }
 
     // admin-fetch-detail-profile-user
@@ -518,7 +518,7 @@ class AdminServiceImplTest {
             userService.getUserDetail(fiktifId);
         });
 
-        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+        assertEquals("User data not found", exception.getMessage());
     }
 
 

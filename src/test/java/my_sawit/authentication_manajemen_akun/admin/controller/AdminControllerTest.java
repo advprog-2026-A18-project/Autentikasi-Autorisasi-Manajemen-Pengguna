@@ -18,8 +18,6 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
@@ -151,13 +149,13 @@ class AdminControllerTest {
                 .build();
 
         when(adminService.assignMandor(buruhId, mandorId))
-                .thenReturn(ApiResponse.success("Successfully assigned Mandorr", mockAssignedBuruh));
+                .thenReturn(ApiResponse.success("Successfully assigned Mandor", mockAssignedBuruh));
 
         mockMvc.perform(put("/admin/users/{buruhId}/assign-mandor/{mandorId}", buruhId, mandorId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.message").value("Successfully assigned Mandorr"))
+                .andExpect(jsonPath("$.message").value("Successfully assigned Mandor"))
                 .andExpect(jsonPath("$.data.namaMandor").value("Andi Mandor"));
     }
 
@@ -188,12 +186,12 @@ class AdminControllerTest {
         UUID mandorId = UUID.randomUUID();
 
         when(adminService.assignMandor(supirId, mandorId))
-                .thenThrow(new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH."));
+                .thenThrow(new IllegalArgumentException("The user who will be assigned has to have BURUH role."));
 
         mockMvc.perform(put("/admin/users/{buruhId}/assign-mandor/{mandorId}", supirId, mandorId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Pengguna yang ditugaskan harus memiliki role BURUH."));
+                .andExpect(jsonPath("$.message").value("The user who will be assigned has to have BURUH role."));
     }
 
     @Test
@@ -201,12 +199,12 @@ class AdminControllerTest {
         UUID fiktifId = UUID.randomUUID();
 
         when(adminService.unassignMandor(fiktifId))
-                .thenThrow(new RuntimeException("Data Buruh tidak ditemukan"));
+                .thenThrow(new RuntimeException("Data Buruh not found"));
 
         mockMvc.perform(put("/admin/users/{buruhId}/unassign-mandor", fiktifId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Data Buruh tidak ditemukan"));
+                .andExpect(jsonPath("$.message").value("Data Buruh not found"));
     }
 
     @Test
@@ -232,13 +230,13 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         when(adminService.deleteUser(targetId, "admin@sawit.com"))
-                .thenThrow(new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri."));
+                .thenThrow(new IllegalArgumentException("Admin can't be deleted"));
 
         mockMvc.perform(delete("/admin/users/{userId}", targetId)
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Admin tidak dapat menghapus dirinya sendiri."));
+                .andExpect(jsonPath("$.message").value("Admin can't be deleted"));
     }
 
     @Test
@@ -247,13 +245,13 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         when(adminService.deleteUser(fiktifId, "admin@sawit.com"))
-                .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
+                .thenThrow(new RuntimeException("User data not found"));
 
         mockMvc.perform(delete("/admin/users/{userId}", fiktifId)
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Data pengguna tidak ditemukan"));
+                .andExpect(jsonPath("$.message").value("User data not found"));
     }
 
     @Test
@@ -267,13 +265,13 @@ class AdminControllerTest {
                 .build();
 
         when(adminService.getUserDetail(targetId))
-                .thenReturn(ApiResponse.success("Berhasil mengambil detail pengguna", expectedResponse));
+                .thenReturn(ApiResponse.success("Successfully fetched detail user", expectedResponse));
 
         mockMvc.perform(get("/admin/users/{userId}", targetId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.message").value("Berhasil mengambil detail pengguna"))
+                .andExpect(jsonPath("$.message").value("Successfully fetched detail user"))
                 .andExpect(jsonPath("$.data.id").value(targetId.toString()))
                 .andExpect(jsonPath("$.data.fullname").value("Budi Santoso"))
                 .andExpect(jsonPath("$.data.namaMandor").value("Andi Mandor"));
@@ -284,11 +282,11 @@ class AdminControllerTest {
         UUID fiktifId = UUID.randomUUID();
 
         when(adminService.getUserDetail(fiktifId))
-                .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
+                .thenThrow(new RuntimeException("User data not found"));
 
         mockMvc.perform(get("/admin/users/{userId}", fiktifId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Data pengguna tidak ditemukan"));
+                .andExpect(jsonPath("$.message").value("User data not found"));
     }
 }

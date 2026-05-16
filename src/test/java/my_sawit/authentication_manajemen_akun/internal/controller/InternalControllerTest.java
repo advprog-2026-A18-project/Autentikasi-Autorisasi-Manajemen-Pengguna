@@ -114,13 +114,13 @@ class InternalControllerTest {
     @Test
     void getUserDetail_HappyPath_ReturnsUser() throws Exception {
         when(adminService.getUserDetail(eq(mockUserId)))
-                .thenReturn(ApiResponse.success("Berhasil mengambil detail pengguna", mockUser));
+                .thenReturn(ApiResponse.success("Successfully fetched detail user", mockUser));
 
         mockMvc.perform(get("/internal/user/{userId}", mockUserId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.message").value("Berhasil mengambil detail pengguna"))
+                .andExpect(jsonPath("$.message").value("Successfully fetched detail user"))
                 .andExpect(jsonPath("$.data.id").value(mockUserId.toString()))
                 .andExpect(jsonPath("$.data.username").value("Evan Haryo"));
     }

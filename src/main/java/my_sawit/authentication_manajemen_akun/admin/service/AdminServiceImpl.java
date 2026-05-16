@@ -65,33 +65,33 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public ApiResponse<UserResponseDTO> assignMandor(UUID buruhId, UUID mandorId) {
         User buruh = userRepository.findById(buruhId)
-                .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("Data Buruh not found"));
 
         User mandor = userRepository.findById(mandorId)
-                .orElseThrow(() -> new RuntimeException("Data Mandor tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("Data Mandor not found"));
 
         if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
-            throw new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH.");
+            throw new IllegalArgumentException("The user who will be assigned has to have BURUH role.");
         }
 
         if (mandor.getRole() == null || !"MANDOR".equalsIgnoreCase(mandor.getRole().getName())) {
-            throw new IllegalArgumentException("Target atasan harus memiliki role MANDOR.");
+            throw new IllegalArgumentException("The boss who will be assigned has to have MANDOR role.");
         }
 
         buruh.setMandor(mandor);
         userRepository.save(buruh);
         UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
-        return ApiResponse.success("Successfully assigned Mandorr", data);
+        return ApiResponse.success("Successfully assigned Mandor", data);
     }
 
     @Override
     @Transactional
     public ApiResponse<UserResponseDTO> unassignMandor(UUID buruhId) {
         User buruh = userRepository.findById(buruhId)
-                .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("Data Buruh not found"));
 
         if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
-            throw new IllegalArgumentException("Hanya role BURUH yang dapat dicopot penugasannya.");
+            throw new IllegalArgumentException("Only users with BURUH role can be unassigned.");
         }
 
         buruh.setMandor(null);
@@ -104,10 +104,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public ApiResponse<Void> deleteUser(UUID targetId, String currentAdminEmail) {
         User targetUser = userRepository.findById(targetId)
-                .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("User data not found"));
 
         if (targetUser.getEmail().equalsIgnoreCase(currentAdminEmail)) {
-            throw new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri.");
+            throw new IllegalArgumentException("Admin can't be deleted.");
         }
 
         List<User> buruhList = userRepository.findByMandor(targetUser);
@@ -135,10 +135,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(readOnly = true)
     public ApiResponse<UserResponseDTO> getUserDetail(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("User data not found"));
 
         UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
-        return ApiResponse.success("Berhasil mengambil detail pengguna", data);
+        return ApiResponse.success("Successfully fetched detail user", data);
     }
 
 
