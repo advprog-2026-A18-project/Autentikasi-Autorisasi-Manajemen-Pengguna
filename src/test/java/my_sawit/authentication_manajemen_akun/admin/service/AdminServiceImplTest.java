@@ -1,5 +1,7 @@
 package my_sawit.authentication_manajemen_akun.admin.service;
 
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
+import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
@@ -120,10 +122,14 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(eq("Bambang S"), isNull(), isNull(), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers("Bambang S", null, null, 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response =
+                userService.searchUsers("Bambang S", null, null, 0, 10);
 
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
+
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
-        assertEquals(1L, result.getTotalElements()); 
+        assertEquals(1L, result.getTotalElements());
         assertEquals("Bambang S", result.getContent().getFirst().getFullname());
     }
 
@@ -135,9 +141,12 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(eq("bambangz"), isNull(), isNull(), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers("bambangz", null, null, 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response  = userService.searchUsers("bambangz", null, null, 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
         assertEquals("bambangz", result.getContent().getFirst().getUsername());
     }
 
@@ -149,9 +158,14 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(isNull(), eq("agus@sawit.com"), isNull(), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers(null, "agus@sawit.com", null, 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response =
+                userService.searchUsers(null, "agus@sawit.com", null, 0, 10);
 
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
+
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
         assertEquals("agus@sawit.com", result.getContent().getFirst().getEmail());
     }
 
@@ -163,9 +177,12 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(eq("aguz"), eq("agus@sawit.com"), eq("SUPIR"), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers("aguz", "agus@sawit.com", "SUPIR", 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = userService.searchUsers("aguz", "agus@sawit.com", "SUPIR", 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
         assertEquals("Agus S", result.getContent().getFirst().getFullname());
         assertEquals("SUPIR", result.getContent().getFirst().getRole());
     }
@@ -178,8 +195,10 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(eq("Bambang"), isNull(), isNull(), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers("Bambang", null, null, 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = userService.searchUsers("Bambang", null, null, 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
         assertEquals(2L, result.getTotalElements());
         assertEquals(2, result.getContent().size());
@@ -194,7 +213,7 @@ class AdminServiceImplTest {
             userService.searchUsers(null, null, "HACKER", 0, 10);
         });
 
-        assertEquals("Role tidak valid: HACKER", exception.getMessage());
+        assertEquals("Role invalid: HACKER", exception.getMessage());
     }
 
     @Test
@@ -207,8 +226,9 @@ class AdminServiceImplTest {
         when(mandorProfileRepository.findByUser(mockMandor))
                 .thenReturn(Optional.of(mockMandorProfile));
 
-        Page<UserResponseDTO> result = userService.searchUsers(null, null, "mandor", 0, 10);
-
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = userService.searchUsers(null, null, "mandor", 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
         assertEquals("MANDOR", result.getContent().getFirst().getRole());
         assertEquals("MNDR-001", result.getContent().getFirst().getNomorSertifikasi());
@@ -224,7 +244,8 @@ class AdminServiceImplTest {
         when(mandorProfileRepository.findByUser(mockMandor))
                 .thenReturn(Optional.empty());
 
-        Page<UserResponseDTO> result = userService.searchUsers(null, null, "MANDOR", 0, 10);
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = userService.searchUsers(null, null, "MANDOR", 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
 
         assertNotNull(result);
         assertNull(result.getContent().getFirst().getNomorSertifikasi());
@@ -243,8 +264,8 @@ class AdminServiceImplTest {
         when(userRepository.searchUsers(isNull(), isNull(), isNull(), eq(pageable)))
                 .thenReturn(mockPage);
 
-        Page<UserResponseDTO> result = userService.searchUsers(null, null, null, 0, 10);
-
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = userService.searchUsers(null, null, null, 0, 10);
+        PagingResponseDTO<UserResponseDTO> result = response.getData();
 
         assertNotNull(result);
         assertNull(result.getContent().getFirst().getRole());
@@ -261,9 +282,9 @@ class AdminServiceImplTest {
         when(userRepository.findById(mandorId)).thenReturn(Optional.of(mockMandor));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        UserResponseDTO result = userService.assignMandor(buruhId, mandorId);
+        ApiResponse<UserResponseDTO> result = userService.assignMandor(buruhId, mandorId);
 
-        assertNotNull(result);
+        assertNotNull(result.getData());
         assertEquals(mockMandor, mockBuruh.getMandor());
     }
 
@@ -277,9 +298,9 @@ class AdminServiceImplTest {
         when(userRepository.findById(mandor2Id)).thenReturn(Optional.of(mockMandor2));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        UserResponseDTO result = userService.assignMandor(buruhId, mandor2Id);
+        ApiResponse<UserResponseDTO> result = userService.assignMandor(buruhId, mandor2Id);
 
-        assertNotNull(result);
+        assertNotNull(result.getData());
         assertEquals(mockMandor2, mockBuruh.getMandor());
         assertNotEquals(mockMandor, mockBuruh.getMandor());
     }
@@ -352,9 +373,9 @@ class AdminServiceImplTest {
         when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        UserResponseDTO result = userService.unassignMandor(buruhId);
+        ApiResponse<UserResponseDTO> result = userService.unassignMandor(buruhId);
 
-        assertNotNull(result);
+        assertNotNull(result.getData());
         assertNull(mockBuruh.getMandor());
     }
 
@@ -457,8 +478,8 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(targetId)).thenReturn(Optional.of(mockBuruh));
 
-        UserResponseDTO result = userService.getUserDetail(targetId);
-
+        ApiResponse<UserResponseDTO> response = userService.getUserDetail(targetId);
+        UserResponseDTO result = response.getData();
         assertNotNull(result);
         assertEquals(mockBuruh.getId(), result.getId());
         assertEquals("Bambang S", result.getFullname());
@@ -475,7 +496,8 @@ class AdminServiceImplTest {
         when(userRepository.findById(targetId)).thenReturn(Optional.of(mockMandor));
         when(mandorProfileRepository.findByUser(mockMandor)).thenReturn(Optional.of(mockMandorProfile));
 
-        UserResponseDTO result = userService.getUserDetail(targetId);
+        ApiResponse<UserResponseDTO> response = userService.getUserDetail(targetId);
+        UserResponseDTO result = response.getData();
 
         assertNotNull(result);
         assertEquals(mockMandor.getId(), result.getId());

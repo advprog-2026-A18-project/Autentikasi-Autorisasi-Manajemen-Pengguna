@@ -1,39 +1,46 @@
 package my_sawit.authentication_manajemen_akun.admin.controller;
 
-import my_sawit.authentication_manajemen_akun.dto.request.UserSearchRequestDTO;
+import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(AdminController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AdminControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private AdminService adminService;
 
-    @InjectMocks
-    private AdminController adminController;
+    @MockitoBean
+    private JwtUtils jwtUtils;
 
     private UserResponseDTO mockUserBuruh;
     private UserResponseDTO mockUserMandor;
@@ -52,96 +59,88 @@ class AdminControllerTest {
     }
 
     @Test
-    void searchUsers_WithoutParams_ShouldReturnSuccess() {
-        Page<UserResponseDTO> mockPage = new PageImpl<>(List.of(mockUserBuruh));
+    void searchUsers_WithoutParams_ShouldReturnSuccess() throws Exception {
+        PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
+                .content(List.of(mockUserBuruh))
+                .currentPage(0)
+                .totalPages(1)
+                .totalElements(1)
+                .build();
+
         when(adminService.searchUsers(isNull(), isNull(), isNull(), eq(0), eq(10)))
-                .thenReturn(mockPage);
+                .thenReturn(ApiResponse.success("Successfully fetched users list", pagingData));
 
-        UserSearchRequestDTO requestDTO = new UserSearchRequestDTO();
-
-        ResponseEntity<ApiResponse<PagingResponseDTO<UserResponseDTO>>> response =
-                adminController.searchUsers(requestDTO);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil mengambil daftar pengguna", response.getBody().getMessage());
-
-        PagingResponseDTO<UserResponseDTO> responseData = response.getBody().getData();
-        assertEquals(1L, responseData.getTotalElements());
-        assertEquals("Budi Santoso", responseData.getContent().getFirst().getFullname());
+        mockMvc.perform(get("/admin/users")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Successfully fetched users list"))
+                .andExpect(jsonPath("$.data.content[0].fullname").value("Budi Santoso"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
     }
 
     @Test
-    void searchUsers_WithParams_ShouldReturnFilteredData() {
-        Page<UserResponseDTO> mockPage = new PageImpl<>(List.of(mockUserMandor));
+    void searchUsers_WithParams_ShouldReturnFilteredData() throws Exception {
+        PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
+                .content(List.of(mockUserMandor))
+                .currentPage(1)
+                .totalPages(1)
+                .totalElements(1)
+                .build();
+
         when(adminService.searchUsers(eq("Andi"), eq("andi@sawit.com"), eq("MANDOR"), eq(1), eq(5)))
-                .thenReturn(mockPage);
+                .thenReturn(ApiResponse.success("Successfully fetched users list", pagingData));
 
-        UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
-                .name("Andi")
-                .email("andi@sawit.com")
-                .role("MANDOR")
-                .page(1)
-                .size(5)
-                .build();
-
-        ResponseEntity<ApiResponse<PagingResponseDTO<UserResponseDTO>>> response =
-                adminController.searchUsers(requestDTO);
-
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-
-        PagingResponseDTO<UserResponseDTO> responseData = response.getBody().getData();
-        assertEquals("Andi Mandor", responseData.getContent().getFirst().getFullname());
-        assertEquals("MANDOR", responseData.getContent().getFirst().getRole());
+        mockMvc.perform(get("/admin/users")
+                        .param("name", "Andi")
+                        .param("email", "andi@sawit.com")
+                        .param("role", "MANDOR")
+                        .param("page", "1")
+                        .param("size", "5")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content[0].fullname").value("Andi Mandor"))
+                .andExpect(jsonPath("$.data.content[0].role").value("MANDOR"));
     }
 
     @Test
-    void searchUsers_EmptyData_ShouldReturnNoUsersFetchedMessage() {
-        Page<UserResponseDTO> emptyPage = new PageImpl<>(Collections.emptyList());
+    void searchUsers_EmptyData_ShouldReturnNoUsersFetchedMessage() throws Exception {
+        PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
+                .content(List.of())
+                .currentPage(0)
+                .totalPages(0)
+                .totalElements(0)
+                .build();
+
         when(adminService.searchUsers(eq("Fiktif"), isNull(), isNull(), eq(0), eq(10)))
-                .thenReturn(emptyPage);
+                .thenReturn(ApiResponse.success("No users fetched", pagingData));
 
-        UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
-                .name("Fiktif")
-                .build();
-
-        ResponseEntity<ApiResponse<PagingResponseDTO<UserResponseDTO>>> response =
-                adminController.searchUsers(requestDTO);
-
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("No users fetched", response.getBody().getMessage());
-
-        PagingResponseDTO<UserResponseDTO> responseData = response.getBody().getData();
-        assertEquals(0L, responseData.getTotalElements());
-        assertTrue(responseData.getContent().isEmpty());
+        mockMvc.perform(get("/admin/users")
+                        .param("name", "Fiktif")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("No users fetched"))
+                .andExpect(jsonPath("$.data.content").isEmpty())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 
     @Test
-    void searchUsers_WithInvalidRole_ShouldThrowException() {
+    void searchUsers_WithInvalidRole_ShouldReturnBadRequest() throws Exception {
         when(adminService.searchUsers(isNull(), isNull(), eq("HACKER"), eq(0), eq(10)))
-                .thenThrow(new IllegalArgumentException("Role tidak valid: HACKER"));
+                .thenThrow(new IllegalArgumentException("Role invalid: HACKER"));
 
-        UserSearchRequestDTO requestDTO = UserSearchRequestDTO.builder()
-                .role("HACKER")
-                .build();
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            adminController.searchUsers(requestDTO);
-        });
-
-        assertEquals("Role tidak valid: HACKER", exception.getMessage());
+        mockMvc.perform(get("/admin/users")
+                        .param("role", "HACKER")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.message").value("Role invalid: HACKER"));
     }
 
-    // ASSIGNING BURUH
-
     @Test
-    void assignMandor_ShouldReturnSuccessResponse() {
+    void assignMandor_ShouldReturnSuccessResponse() throws Exception {
         UUID buruhId = UUID.randomUUID();
         UUID mandorId = UUID.randomUUID();
 
@@ -151,20 +150,19 @@ class AdminControllerTest {
                 .namaMandor("Andi Mandor")
                 .build();
 
-        when(adminService.assignMandor(buruhId, mandorId)).thenReturn(mockAssignedBuruh);
+        when(adminService.assignMandor(buruhId, mandorId))
+                .thenReturn(ApiResponse.success("Successfully assigned Mandorr", mockAssignedBuruh));
 
-        ResponseEntity<ApiResponse<UserResponseDTO>> response =
-                adminController.assignMandor(buruhId, mandorId);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil menugaskan mandor", response.getBody().getMessage());
-        assertEquals("Andi Mandor", response.getBody().getData().getNamaMandor());
+        mockMvc.perform(put("/admin/users/{buruhId}/assign-mandor/{mandorId}", buruhId, mandorId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Successfully assigned Mandorr"))
+                .andExpect(jsonPath("$.data.namaMandor").value("Andi Mandor"));
     }
 
     @Test
-    void unassignMandor_ShouldReturnSuccessResponse() {
+    void unassignMandor_ShouldReturnSuccessResponse() throws Exception {
         UUID buruhId = UUID.randomUUID();
 
         UserResponseDTO mockUnassignedBuruh = UserResponseDTO.builder()
@@ -173,100 +171,93 @@ class AdminControllerTest {
                 .namaMandor(null)
                 .build();
 
-        when(adminService.unassignMandor(buruhId)).thenReturn(mockUnassignedBuruh);
+        when(adminService.unassignMandor(buruhId))
+                .thenReturn(ApiResponse.success("Successfully unassign mandor", mockUnassignedBuruh));
 
-        ResponseEntity<ApiResponse<UserResponseDTO>> response =
-                adminController.unassignMandor(buruhId);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil mencopot penugasan mandor", response.getBody().getMessage());
-        assertNull(response.getBody().getData().getNamaMandor());
+        mockMvc.perform(put("/admin/users/{buruhId}/unassign-mandor", buruhId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Successfully unassign mandor"))
+                .andExpect(jsonPath("$.data.namaMandor").doesNotExist());
     }
 
     @Test
-    void assignMandor_ShouldThrowException_WhenServiceThrowsError() {
+    void assignMandor_ShouldReturnBadRequest_WhenServiceThrowsError() throws Exception {
         UUID supirId = UUID.randomUUID();
         UUID mandorId = UUID.randomUUID();
 
         when(adminService.assignMandor(supirId, mandorId))
                 .thenThrow(new IllegalArgumentException("Pengguna yang ditugaskan harus memiliki role BURUH."));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            adminController.assignMandor(supirId, mandorId);
-        });
-
-        assertEquals("Pengguna yang ditugaskan harus memiliki role BURUH.", exception.getMessage());
+        mockMvc.perform(put("/admin/users/{buruhId}/assign-mandor/{mandorId}", supirId, mandorId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Pengguna yang ditugaskan harus memiliki role BURUH."));
     }
 
     @Test
-    void unassignMandor_ShouldThrowException_WhenIdNotFound() {
+    void unassignMandor_ShouldReturnBadRequest_WhenIdNotFound() throws Exception {
         UUID fiktifId = UUID.randomUUID();
 
         when(adminService.unassignMandor(fiktifId))
                 .thenThrow(new RuntimeException("Data Buruh tidak ditemukan"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            adminController.unassignMandor(fiktifId);
-        });
-
-        assertEquals("Data Buruh tidak ditemukan", exception.getMessage());
+        mockMvc.perform(put("/admin/users/{buruhId}/unassign-mandor", fiktifId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Data Buruh tidak ditemukan"));
     }
 
-    // delete-by-admin
-
     @Test
-    void deleteUser_ShouldReturnSuccessResponse() {
+    void deleteUser_ShouldReturnSuccessResponse() throws Exception {
         UUID targetId = UUID.randomUUID();
         Principal mockPrincipal = () -> "admin@sawit.com";
 
-        org.mockito.Mockito.doNothing().when(adminService).deleteUser(targetId, "admin@sawit.com");
+        when(adminService.deleteUser(targetId, "admin@sawit.com"))
+                .thenReturn(ApiResponse.success("Successfully deleted users", null));
 
-        ResponseEntity<ApiResponse<Object>> response = adminController.deleteUser(targetId, mockPrincipal);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil menghapus pengguna", response.getBody().getMessage());
-        assertNull(response.getBody().getData());
+        mockMvc.perform(delete("/admin/users/{userId}", targetId)
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Successfully deleted users"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
-    void deleteUser_ShouldThrowException_WhenTryingToDeleteSelf() {
+    void deleteUser_ShouldReturnBadRequest_WhenTryingToDeleteSelf() throws Exception {
         UUID targetId = UUID.randomUUID();
         Principal mockPrincipal = () -> "admin@sawit.com";
 
-        org.mockito.Mockito.doThrow(new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri."))
-                .when(adminService).deleteUser(targetId, "admin@sawit.com");
+        when(adminService.deleteUser(targetId, "admin@sawit.com"))
+                .thenThrow(new IllegalArgumentException("Admin tidak dapat menghapus dirinya sendiri."));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            adminController.deleteUser(targetId, mockPrincipal);
-        });
-
-        assertEquals("Admin tidak dapat menghapus dirinya sendiri.", exception.getMessage());
+        mockMvc.perform(delete("/admin/users/{userId}", targetId)
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Admin tidak dapat menghapus dirinya sendiri."));
     }
 
     @Test
-    void deleteUser_ShouldThrowException_WhenUserNotFound() {
+    void deleteUser_ShouldReturnBadRequest_WhenUserNotFound() throws Exception {
         UUID fiktifId = UUID.randomUUID();
         Principal mockPrincipal = () -> "admin@sawit.com";
 
-        org.mockito.Mockito.doThrow(new RuntimeException("Data pengguna tidak ditemukan"))
-                .when(adminService).deleteUser(fiktifId, "admin@sawit.com");
+        when(adminService.deleteUser(fiktifId, "admin@sawit.com"))
+                .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            adminController.deleteUser(fiktifId, mockPrincipal);
-        });
-
-        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+        mockMvc.perform(delete("/admin/users/{userId}", fiktifId)
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Data pengguna tidak ditemukan"));
     }
 
-    // admin-fetch-detail-profile-user
-
-
     @Test
-    void getUserDetail_ShouldReturnSuccessResponse() {
+    void getUserDetail_ShouldReturnSuccessResponse() throws Exception {
         UUID targetId = UUID.randomUUID();
         UserResponseDTO expectedResponse = UserResponseDTO.builder()
                 .id(targetId)
@@ -275,35 +266,29 @@ class AdminControllerTest {
                 .namaMandor("Andi Mandor")
                 .build();
 
+        when(adminService.getUserDetail(targetId))
+                .thenReturn(ApiResponse.success("Berhasil mengambil detail pengguna", expectedResponse));
 
-        when(adminService.getUserDetail(targetId)).thenReturn(expectedResponse);
-
-
-        ResponseEntity<ApiResponse<UserResponseDTO>> response = adminController.getUserDetail(targetId);
-
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil mengambil detail pengguna", response.getBody().getMessage());
-        assertEquals("Budi Santoso", response.getBody().getData().getFullname());
-        assertEquals("Andi Mandor", response.getBody().getData().getNamaMandor());
-
-
-        verify(adminService, times(1)).getUserDetail(targetId);
+        mockMvc.perform(get("/admin/users/{userId}", targetId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Berhasil mengambil detail pengguna"))
+                .andExpect(jsonPath("$.data.id").value(targetId.toString()))
+                .andExpect(jsonPath("$.data.fullname").value("Budi Santoso"))
+                .andExpect(jsonPath("$.data.namaMandor").value("Andi Mandor"));
     }
 
     @Test
-    void getUserDetail_ShouldThrowException_WhenUserNotFound() {
+    void getUserDetail_ShouldReturnBadRequest_WhenUserNotFound() throws Exception {
         UUID fiktifId = UUID.randomUUID();
+
         when(adminService.getUserDetail(fiktifId))
                 .thenThrow(new RuntimeException("Data pengguna tidak ditemukan"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            adminController.getUserDetail(fiktifId);
-        });
-
-        assertEquals("Data pengguna tidak ditemukan", exception.getMessage());
+        mockMvc.perform(get("/admin/users/{userId}", fiktifId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Data pengguna tidak ditemukan"));
     }
-
 }
