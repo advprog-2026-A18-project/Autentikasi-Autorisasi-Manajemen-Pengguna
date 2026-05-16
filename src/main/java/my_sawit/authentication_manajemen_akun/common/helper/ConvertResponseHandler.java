@@ -78,4 +78,31 @@ public class ConvertResponseHandler {
                 .user(profileDTO)
                 .build();
     }
+
+    public static AuthResponseDTO convertToAuthResponseDTO(
+            User user,
+            String nomorSertifikasi,
+            String requestRefreshToken,
+            JwtUtils jwtUtils
+    ) {
+        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+
+        UserResponseDTO profileDTO = UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .nomorSertifikasi(nomorSertifikasi)
+                .namaMandor(namaMandor)
+                .build();
+
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
+
+        return AuthResponseDTO.builder()
+                .accessToken(token)
+                .refreshToken(requestRefreshToken)
+                .user(profileDTO)
+                .build();
+    }
 }
