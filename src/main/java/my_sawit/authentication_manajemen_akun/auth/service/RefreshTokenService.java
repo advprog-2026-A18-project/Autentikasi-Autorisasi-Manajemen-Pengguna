@@ -1,5 +1,6 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
 
@@ -11,7 +12,8 @@ public interface RefreshTokenService {
     RefreshToken createRefreshToken(UUID userId);
     RefreshToken verifyExpiration(RefreshToken token);
     Optional<RefreshToken> findByToken(String token);
-    AuthResponseDTO refreshAccessToken(String requestRefreshToken);
-    void deleteByToken(String token);
+    ApiResponse<AuthResponseDTO> refreshAccessToken(String requestRefreshToken);
+    ApiResponse<Void> deleteByToken(String token);
+
 
 }

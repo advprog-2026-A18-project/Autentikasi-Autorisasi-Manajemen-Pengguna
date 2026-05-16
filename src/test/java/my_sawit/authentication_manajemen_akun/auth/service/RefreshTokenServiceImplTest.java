@@ -8,6 +8,8 @@ import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.RefreshTokenRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
+import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -184,16 +186,16 @@ class RefreshTokenServiceImplTest {
         when(refreshTokenRepository.findByToken(oldToken)).thenReturn(Optional.of(validRefreshToken));
         when(jwtUtils.generateToken(userBuruh.getEmail(), roleBuruh.getName(), userBuruh.getId().toString())).thenReturn(newAccessToken);
 
-        // Act
-        my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO result =
-                refreshTokenService.refreshAccessToken(oldToken);
+        ApiResponse<AuthResponseDTO> response = refreshTokenService.refreshAccessToken(oldToken);
+        AuthResponseDTO result = response.getData();
 
-        // Assert
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Token refreshed successfully", response.getMessage());
         assertNotNull(result);
         assertEquals(newAccessToken, result.getAccessToken());
         assertEquals(oldToken, result.getRefreshToken());
         assertEquals("BURUH", result.getUser().getRole());
-        assertNull(result.getUser().getNomorSertifikasi()); // Karena bukan mandor
+        assertNull(result.getUser().getNomorSertifikasi());
     }
 
     @Test
@@ -226,12 +228,13 @@ class RefreshTokenServiceImplTest {
         when(jwtUtils.generateToken(userMandor.getEmail(), roleMandor.getName(), userMandor.getId().toString())).thenReturn(newAccessToken);
         when(mandorProfileRepository.findByUser(userMandor)).thenReturn(Optional.of(mandorProfile));
 
-        my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO result =
-                refreshTokenService.refreshAccessToken(oldToken);
+        ApiResponse<AuthResponseDTO> response = refreshTokenService.refreshAccessToken(oldToken);
+        AuthResponseDTO result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
         assertNotNull(result);
         assertEquals("MANDOR", result.getUser().getRole());
-        assertEquals("MNDR-12345", result.getUser().getNomorSertifikasi()); // Harus ada datanya
+        assertEquals("MNDR-12345", result.getUser().getNomorSertifikasi());
     }
 
     @Test

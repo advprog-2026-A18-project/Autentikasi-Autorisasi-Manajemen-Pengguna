@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
@@ -17,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+
+import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -71,20 +74,18 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public void deleteByToken(String token) {
+    public ApiResponse<Void> deleteByToken(String token) {
         refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+        return ApiResponse.success("Successfully logout", null);
     }
 
     @Override
     @Transactional
-    public AuthResponseDTO refreshAccessToken(String requestRefreshToken) {
-        return findByToken(requestRefreshToken)
+    public ApiResponse<AuthResponseDTO> refreshAccessToken(String requestRefreshToken) {
+        AuthResponseDTO authData = findByToken(requestRefreshToken)
                 .map(this::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-
-                    String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getName(), user.getId().toString());
-
                     String nomorSertifikasi = null;
                     if ("MANDOR".equalsIgnoreCase(user.getRole().getName())) {
                         Optional<MandorProfile> mandorProfile = mandorProfileRepository.findByUser(user);
@@ -92,26 +93,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                             nomorSertifikasi = mandorProfile.get().getNomorSertifikasi();
                         }
                     }
-                    String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
-
-                    UserResponseDTO profileDTO = UserResponseDTO.builder()
-                            .id(user.getId())
-                            .username(user.getUsername())
-                            .fullname(user.getFullname())
-                            .email(user.getEmail())
-                            .role(user.getRole().getName())
-                            .nomorSertifikasi(nomorSertifikasi)
-                            .namaMandor(namaMandor)
-                            .build();
-
-                    return AuthResponseDTO.builder()
-                            .accessToken(newAccessToken)
-                            .refreshToken(requestRefreshToken)
-                            .user(profileDTO)
-                            .build();
-
-                })
-                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+                    return convertToAuthResponseDTO(user, nomorSertifikasi, requestRefreshToken, jwtUtils);
+                }).orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+        return ApiResponse.success("Token refreshed successfully", authData);
     }
 
 }
