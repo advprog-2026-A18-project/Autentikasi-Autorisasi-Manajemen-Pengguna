@@ -22,7 +22,7 @@ public class InternalController {
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PagingResponseDTO<UserResponseDTO>>> searchUsers(@ModelAttribute UserSearchRequestDTO searchRequest) {
-        Page<UserResponseDTO> usersPage = adminService.searchUsers(
+        ApiResponse<PagingResponseDTO<UserResponseDTO>> response = adminService.searchUsers(
                 searchRequest.getName(),
                 searchRequest.getEmail(),
                 searchRequest.getRole(),
@@ -30,27 +30,13 @@ public class InternalController {
                 searchRequest.getSize()
         );
 
-        String message = usersPage.isEmpty() ? "No users fetched" : "Berhasil mengambil daftar pengguna";
-
-        PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
-                .content(usersPage.getContent())
-                .currentPage(usersPage.getNumber())
-                .totalPages(usersPage.getTotalPages())
-                .totalElements(usersPage.getTotalElements())
-                .build();
-
-        return ResponseEntity.ok(new ApiResponse<>(200, message, pagingData));
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserDetail(@PathVariable UUID userId) {
-        UserResponseDTO userDetail = adminService.getUserDetail(userId);
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Berhasil mengambil detail pengguna",
-                userDetail
-        ));
+        ApiResponse<UserResponseDTO> response = adminService.getUserDetail(userId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
 }
