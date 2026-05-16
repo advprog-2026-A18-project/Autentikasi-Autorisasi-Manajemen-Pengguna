@@ -45,15 +45,14 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponseDTO>> refresh(@Valid @RequestBody TokenRefreshRequestDTO request) {
-        AuthResponseDTO authData = refreshTokenService.refreshAccessToken(request.getRefreshToken());
-        return ResponseEntity.ok(new ApiResponse<>(200, "Token refreshed successfully", authData));
+        ApiResponse<AuthResponseDTO> response = refreshTokenService.refreshAccessToken(request.getRefreshToken());
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody TokenRefreshRequestDTO request) {
-
-        refreshTokenService.deleteByToken(request.getRefreshToken());
-        return ResponseEntity.ok(new ApiResponse<>(200, "Successfully logout", null));
+        ApiResponse<Void> response = refreshTokenService.deleteByToken(request.getRefreshToken());
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
 
