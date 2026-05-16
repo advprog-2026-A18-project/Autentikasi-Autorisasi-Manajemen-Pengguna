@@ -1,5 +1,7 @@
 package my_sawit.authentication_manajemen_akun.admin.service;
 
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
+import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import org.springframework.data.domain.Page;
 
@@ -7,13 +9,20 @@ import java.util.UUID;
 
 public interface AdminService {
 
-    Page<UserResponseDTO> searchUsers(String name, String email, String role, int page, int size);
+    ApiResponse<PagingResponseDTO<UserResponseDTO>> searchUsers(
+            String name,
+            String email,
+            String role,
+            int page,
+            int size
+    );
 
-    UserResponseDTO assignMandor(UUID buruhId, UUID mandorId);
-    UserResponseDTO unassignMandor(UUID buruhId);
+    ApiResponse<UserResponseDTO> assignMandor(UUID buruhId, UUID mandorId);
 
-    void deleteUser(UUID userId, String adminEmail);
+    ApiResponse<UserResponseDTO> unassignMandor(UUID buruhId);
 
-    UserResponseDTO getUserDetail(UUID userId);
+    ApiResponse<Void> deleteUser(UUID userId, String adminEmail);
+
+    ApiResponse<UserResponseDTO> getUserDetail(UUID userId);
 
 }

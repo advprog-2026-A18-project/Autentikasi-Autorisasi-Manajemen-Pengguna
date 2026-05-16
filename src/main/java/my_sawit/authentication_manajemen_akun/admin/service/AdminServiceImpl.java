@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
+import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
@@ -26,13 +28,13 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserResponseDTO> searchUsers(String name, String email, String role, int page, int size) {
+    public ApiResponse<PagingResponseDTO<UserResponseDTO>> searchUsers(String name, String email, String role, int page, int size) {
 
         if (role != null && !role.isBlank()) {
             String roleUpper = role.toUpperCase();
             if (!roleUpper.equals("BURUH") && !roleUpper.equals("MANDOR") &&
                     !roleUpper.equals("SUPIR") && !roleUpper.equals("ADMIN")) {
-                throw new IllegalArgumentException("Role tidak valid: " + role);
+                throw new IllegalArgumentException("Role invalid: " + role);
             }
             role = roleUpper;
         }
@@ -41,12 +43,27 @@ public class AdminServiceImpl implements AdminService {
 
         Page<User> usersPage = userRepository.searchUsers(name, email, role, pageable);
 
-        return usersPage.map(user -> ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository));
+        Page<UserResponseDTO> responsePage = usersPage.map(
+                user -> ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository)
+        );
+
+        PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
+                .content(responsePage.getContent())
+                .currentPage(responsePage.getNumber())
+                .totalPages(responsePage.getTotalPages())
+                .totalElements(responsePage.getTotalElements())
+                .build();
+
+        String message = responsePage.isEmpty()
+                ? "No users fetched"
+                : "Successfully fetched users list";
+
+        return ApiResponse.success(message, pagingData);
     }
 
     @Override
     @Transactional
-    public UserResponseDTO assignMandor(UUID buruhId, UUID mandorId) {
+    public ApiResponse<UserResponseDTO> assignMandor(UUID buruhId, UUID mandorId) {
         User buruh = userRepository.findById(buruhId)
                 .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
 
@@ -63,12 +80,13 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(mandor);
         userRepository.save(buruh);
-        return ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        return ApiResponse.success("Successfully assigned Mandorr", data);
     }
 
     @Override
     @Transactional
-    public UserResponseDTO unassignMandor(UUID buruhId) {
+    public ApiResponse<UserResponseDTO> unassignMandor(UUID buruhId) {
         User buruh = userRepository.findById(buruhId)
                 .orElseThrow(() -> new RuntimeException("Data Buruh tidak ditemukan"));
 
@@ -78,12 +96,13 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(null);
         userRepository.save(buruh);
-        return ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        return ApiResponse.success("Successfully unassign mandor", data);
     }
 
     @Override
     @Transactional
-    public void deleteUser(UUID targetId, String currentAdminEmail) {
+    public ApiResponse<Void> deleteUser(UUID targetId, String currentAdminEmail) {
         User targetUser = userRepository.findById(targetId)
                 .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
 
@@ -109,15 +128,17 @@ public class AdminServiceImpl implements AdminService {
         userRepository.flush();
 
         userRepository.deleteById(targetId);
+        return ApiResponse.success("Successfully deleted users", null);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getUserDetail(UUID userId) {
+    public ApiResponse<UserResponseDTO> getUserDetail(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Data pengguna tidak ditemukan"));
 
-        return ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        return ApiResponse.success("Berhasil mengambil detail pengguna", data);
     }
 
 
