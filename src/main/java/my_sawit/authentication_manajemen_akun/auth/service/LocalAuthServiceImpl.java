@@ -54,20 +54,20 @@ public class LocalAuthServiceImpl implements LocalAuthService {
 
 
         Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException("Role tidak valid: " + request.getRole()));
+                .orElseThrow(() -> new IllegalArgumentException("Role invalid: " + request.getRole()));
 
-        String nomorSertifikasi = null;
+        CheckerHelper.NomorSertifikasiCheckResult sertifikasiCheck =
+                CheckerHelper.validateNomorSertifikasiForMandor(
+                        userRole,
+                        request.getNomorSertifikasi(),
+                        mandorProfileRepository
+                );
 
-
-        if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
-            if (request.getNomorSertifikasi() == null || request.getNomorSertifikasi().isBlank()) {
-                return ApiResponse.badRequest("Mandor must fill Nomor Sertifikasi");
-            }
-            if (mandorProfileRepository.existsByNomorSertifikasi(request.getNomorSertifikasi())) {
-                return ApiResponse.badRequest("Nomor Sertifikasi is already registered");
-            }
-            nomorSertifikasi = request.getNomorSertifikasi();
+        if (!sertifikasiCheck.valid()) {
+            return ApiResponse.badRequest(sertifikasiCheck.message());
         }
+
+        String nomorSertifikasi = sertifikasiCheck.nomorSertifikasi();
 
         User newUser = User.builder()
                 .username(request.getUsername())
