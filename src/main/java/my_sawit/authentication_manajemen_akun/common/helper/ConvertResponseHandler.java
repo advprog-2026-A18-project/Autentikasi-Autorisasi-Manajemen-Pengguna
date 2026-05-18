@@ -57,7 +57,7 @@ public class ConvertResponseHandler {
             RefreshTokenService refreshTokenService,
             JwtUtils jwtUtils
     ) {
-        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+        String namaMandor = fetchNamaMandor(user);
 
         UserResponseDTO profileDTO = UserResponseDTO.builder()
                 .id(user.getId())
@@ -85,7 +85,7 @@ public class ConvertResponseHandler {
             String requestRefreshToken,
             JwtUtils jwtUtils
     ) {
-        String namaMandor = (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+        String namaMandor = fetchNamaMandor(user);
 
         UserResponseDTO profileDTO = UserResponseDTO.builder()
                 .id(user.getId())
@@ -105,4 +105,11 @@ public class ConvertResponseHandler {
                 .user(profileDTO)
                 .build();
     }
+
+    private static String fetchNamaMandor(User user) {
+        return (user.getMandor() != null) ? user.getMandor().getFullname() : null;
+    }
+
+
+
 }
