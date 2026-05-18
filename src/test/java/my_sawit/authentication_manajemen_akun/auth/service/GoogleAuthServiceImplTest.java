@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import my_sawit.authentication_manajemen_akun.auth.service.registration.UserRegistrationService;
 import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
@@ -60,12 +61,16 @@ class GoogleAuthServiceImplTest {
     void setUp() {
         UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
         AuthResponseMapper authResponseMapper = new AuthResponseMapper(jwtUtils, userResponseMapper);
-        authService = spy(new GoogleAuthServiceImpl(
+        UserRegistrationService userRegistrationService = new UserRegistrationService(
                 userRepository,
                 roleRepository,
-                mandorProfileRepository,
+                mandorProfileRepository
+        );
+        authService = spy(new GoogleAuthServiceImpl(
+                userRepository,
                 refreshTokenService,
-                authResponseMapper
+                authResponseMapper,
+                userRegistrationService
         ));
 
         request = GoogleAuthRequestDTO.builder()

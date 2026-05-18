@@ -1,6 +1,6 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
-import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.auth.service.registration.UserRegistrationService;
 import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
@@ -59,13 +59,17 @@ class LocalAuthServiceImplTest {
     void setUp() {
         UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
         AuthResponseMapper authResponseMapper = new AuthResponseMapper(jwtUtils, userResponseMapper);
-        authService = new LocalAuthServiceImpl(
+        UserRegistrationService userRegistrationService = new UserRegistrationService(
                 userRepository,
                 roleRepository,
-                mandorProfileRepository,
+                mandorProfileRepository
+        );
+        authService = new LocalAuthServiceImpl(
+                userRepository,
                 passwordEncoder,
                 refreshTokenService,
-                authResponseMapper
+                authResponseMapper,
+                userRegistrationService
         );
 
         mockRole = Role.builder().id(UUID.randomUUID()).name("BURUH").build();
@@ -133,13 +137,15 @@ class LocalAuthServiceImplTest {
     }
 
     @Test
-    void register_WhenRoleNotFound_ShouldThrowException() {
+    void register_WhenRoleNotFound_ShouldReturn400() {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
 
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> authService.register(registerReq));
-        assertTrue(exception.getMessage().contains("Role invalid"));
+        ApiResponse<AuthResponseDTO> response = authService.register(registerReq);
+
+        assertEquals(400, response.getStatusCode());
+        assertTrue(response.getMessage().contains("Role invalid"));
     }
 
     @Test
