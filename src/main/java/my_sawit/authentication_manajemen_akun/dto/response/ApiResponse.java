@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +27,10 @@ public class ApiResponse<T> {
         return of(ApiResponseStatus.BAD_REQUEST, message, null);
     }
 
+    public static <T> ApiResponse<T> badRequest(String message, T data) {
+        return of(ApiResponseStatus.BAD_REQUEST, message, data);
+    }
+
     public static <T> ApiResponse<T> unauthorized(String message) {
         return of(ApiResponseStatus.UNAUTHORIZED, message, null);
     }
@@ -40,6 +45,14 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> internalServerError(String message) {
         return of(ApiResponseStatus.INTERNAL_SERVER_ERROR, message, null);
+    }
+
+    public static <T> ApiResponse<T> of(HttpStatus status, String message, T data) {
+        return new ApiResponse<>(
+                status.value(),
+                message,
+                data
+        );
     }
 
     public static <T> ApiResponse<T> of(ApiResponseStatus status, String message, T data) {
