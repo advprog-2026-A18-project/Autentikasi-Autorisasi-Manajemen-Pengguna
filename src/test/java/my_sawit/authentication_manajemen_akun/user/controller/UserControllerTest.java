@@ -1,32 +1,41 @@
 package my_sawit.authentication_manajemen_akun.user.controller;
 
-import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import my_sawit.authentication_manajemen_akun.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.security.Principal;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private UserService userService;
 
-    @InjectMocks
-    private UserController userController;
+    @MockitoBean
+    private JwtUtils jwtUtils;
 
     private Principal mockPrincipal;
 
@@ -36,7 +45,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getMyProfile_ShouldReturn200AndProfileData() {
+    void getMyProfile_ShouldReturn200AndProfileData() throws Exception {
         UserResponseDTO mockResponse = UserResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .email("budi@sawit.com")
@@ -44,41 +53,35 @@ class UserControllerTest {
                 .role("BURUH")
                 .build();
 
-        when(userService.getMyProfile("budi@sawit.com")).thenReturn(mockResponse);
+        when(userService.getMyProfile("budi@sawit.com"))
+                .thenReturn(ApiResponse.success("Berhasil mengambil profil", mockResponse));
 
-        ResponseEntity<ApiResponse<UserResponseDTO>> response = userController.getMyProfile(mockPrincipal);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil mengambil profil", response.getBody().getMessage());
-        assertEquals("budi@sawit.com", response.getBody().getData().getEmail());
-
-        verify(userService, times(1)).getMyProfile("budi@sawit.com");
+        mockMvc.perform(get("/users/me")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Berhasil mengambil profil"))
+                .andExpect(jsonPath("$.data.email").value("budi@sawit.com"))
+                .andExpect(jsonPath("$.data.fullname").value("Budi Buruh"))
+                .andExpect(jsonPath("$.data.role").value("BURUH"));
     }
 
     @Test
-    void getMyProfile_ShouldThrowException_WhenProfileNotFound() {
+    void getMyProfile_ShouldReturnBadRequest_WhenProfileNotFound() throws Exception {
         when(userService.getMyProfile("budi@sawit.com"))
                 .thenThrow(new RuntimeException("Profil tidak ditemukan"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            userController.getMyProfile(mockPrincipal);
-        });
-
-        assertEquals("Profil tidak ditemukan", exception.getMessage());
+        mockMvc.perform(get("/users/me")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.message").value("Profil tidak ditemukan"));
     }
 
-    // update-profile
-
     @Test
-    void updateMyProfile_ShouldReturn200AndUpdatedProfileData() {
-        UserUpdateRequestDTO requestDTO =
-                UserUpdateRequestDTO.builder()
-                        .fullname("Budi Santoso")
-                        .username("budi_santoso")
-                        .build();
-
+    void updateMyProfile_ShouldReturn200AndUpdatedProfileData() throws Exception {
         UserResponseDTO mockResponse = UserResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .email("budi@sawit.com")
@@ -87,36 +90,59 @@ class UserControllerTest {
                 .role("BURUH")
                 .build();
 
-        when(userService.updateMyProfile("budi@sawit.com", requestDTO)).thenReturn(mockResponse);
+        when(userService.updateMyProfile(eq("budi@sawit.com"), any()))
+                .thenReturn(ApiResponse.success("Berhasil memperbarui profil", mockResponse));
 
-        ResponseEntity<ApiResponse<UserResponseDTO>> response = userController.updateMyProfile(mockPrincipal, requestDTO);
-
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil memperbarui profil", response.getBody().getMessage());
-        assertEquals("Budi Santoso", response.getBody().getData().getFullname());
-        assertEquals("budi_santoso", response.getBody().getData().getUsername());
-
-        verify(userService, times(1)).updateMyProfile("budi@sawit.com", requestDTO);
+        mockMvc.perform(put("/users/me")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullname": "Budi Santoso",
+                                  "username": "budi_santoso"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Berhasil memperbarui profil"))
+                .andExpect(jsonPath("$.data.fullname").value("Budi Santoso"))
+                .andExpect(jsonPath("$.data.username").value("budi_santoso"));
     }
 
     @Test
-    void updateMyProfile_ShouldThrowException_WhenUsernameTaken() {
-        UserUpdateRequestDTO requestDTO =
-                UserUpdateRequestDTO.builder()
-                        .fullname("Budi")
-                        .username("mandor_agus")
-                        .build();
-
-        when(userService.updateMyProfile("budi@sawit.com", requestDTO))
+    void updateMyProfile_ShouldReturnBadRequest_WhenUsernameTaken() throws Exception {
+        when(userService.updateMyProfile(eq("budi@sawit.com"), any()))
                 .thenThrow(new IllegalArgumentException("Username sudah digunakan oleh pengguna lain"));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            userController.updateMyProfile(mockPrincipal, requestDTO);
-        });
+        mockMvc.perform(put("/users/me")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullname": "Budi",
+                                  "username": "mandor_agus"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.message").value("Username sudah digunakan oleh pengguna lain"));
+    }
 
-        assertEquals("Username sudah digunakan oleh pengguna lain", exception.getMessage());
+    @Test
+    void updateMyProfile_ShouldReturnBadRequest_WhenRequestInvalid() throws Exception {
+        mockMvc.perform(put("/users/me")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullname": "",
+                                  "username": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.message").value("Data validation failed. Please check your input again."))
+                .andExpect(jsonPath("$.data.fullname").value("Nama lengkap tidak boleh kosong"))
+                .andExpect(jsonPath("$.data.username").value("Username tidak boleh kosong"));
     }
 }

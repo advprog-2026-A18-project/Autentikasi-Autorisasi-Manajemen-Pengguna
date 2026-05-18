@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.user.service;
 
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
@@ -69,8 +70,11 @@ class UserServiceImplTest {
         String email = "buruh@sawit.com";
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockBuruh));
 
-        UserResponseDTO result = userService.getMyProfile(email);
+        ApiResponse<UserResponseDTO> response = userService.getMyProfile(email);
+        UserResponseDTO result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Berhasil mengambil profil", response.getMessage());
         assertNotNull(result);
         assertEquals(email, result.getEmail());
         assertEquals("Budi Buruh", result.getFullname());
@@ -87,8 +91,11 @@ class UserServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockMandor));
         when(mandorProfileRepository.findByUser(mockMandor)).thenReturn(Optional.of(mockMandorProfile));
 
-        UserResponseDTO result = userService.getMyProfile(email);
+        ApiResponse<UserResponseDTO> response = userService.getMyProfile(email);
+        UserResponseDTO result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Berhasil mengambil profil", response.getMessage());
         assertNotNull(result);
         assertEquals(email, result.getEmail());
         assertEquals("MANDOR", result.getRole());
@@ -123,8 +130,11 @@ class UserServiceImplTest {
         when(userRepository.existsByUsername("budi_santoso")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        UserResponseDTO result = userService.updateMyProfile(email, requestDTO);
+        ApiResponse<UserResponseDTO> response = userService.updateMyProfile(email, requestDTO);
+        UserResponseDTO result = response.getData();
 
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Berhasil memperbarui profil", response.getMessage());
         assertNotNull(result);
         assertEquals("Budi Santoso", result.getFullname());
         assertEquals("budi_santoso", result.getUsername());
