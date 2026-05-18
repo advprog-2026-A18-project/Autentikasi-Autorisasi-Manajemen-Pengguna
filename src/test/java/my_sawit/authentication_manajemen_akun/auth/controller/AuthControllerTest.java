@@ -1,37 +1,47 @@
 package my_sawit.authentication_manajemen_akun.auth.controller;
 
+import my_sawit.authentication_manajemen_akun.auth.service.LocalAuthService;
+import my_sawit.authentication_manajemen_akun.auth.service.OAuthService;
+import my_sawit.authentication_manajemen_akun.auth.service.RefreshTokenService;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.auth.service.LocalAuthService;
-import my_sawit.authentication_manajemen_akun.auth.service.OAuthService;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private LocalAuthService localAuthService;
 
-    @Mock
+    @MockitoBean
     private OAuthService<GoogleAuthRequestDTO> googleAuthService;
 
-    @InjectMocks
-    private AuthController authController;
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
+
+    @MockitoBean
+    private JwtUtils jwtUtils;
 
     private AuthResponseDTO dummyAuthData;
 
@@ -40,63 +50,92 @@ class AuthControllerTest {
         dummyAuthData = AuthResponseDTO.builder()
                 .accessToken("dummy.jwt.token")
                 .build();
-
     }
 
     @Test
-    void testRegister_ShouldReturn201() {
-        RegisterRequestDTO request = new RegisterRequestDTO();
-        ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(201, "Registration succeed", dummyAuthData);
+    void testRegister_ShouldReturn201() throws Exception {
+        ApiResponse<AuthResponseDTO> mockResponse =
+                new ApiResponse<>(201, "Registration succeed", dummyAuthData);
+
         when(localAuthService.register(any(RegisterRequestDTO.class))).thenReturn(mockResponse);
 
-
-        ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.register(request);
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(201, response.getBody().getStatusCode());
-        assertEquals("Registration succeed", response.getBody().getMessage());
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "budi",
+                                  "fullname": "Budi Buruh",
+                                  "email": "budi@sawit.com",
+                                  "password": "Password123",
+                                  "role": "BURUH"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statusCode").value(201))
+                .andExpect(jsonPath("$.message").value("Registration succeed"))
+                .andExpect(jsonPath("$.data.accessToken").value("dummy.jwt.token"));
     }
 
     @Test
-    void testLogin_ShouldReturn200() {
-        LoginRequestDTO request = new LoginRequestDTO();
-        ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(200, "Login succeed", dummyAuthData);
+    void testLogin_ShouldReturn200() throws Exception {
+        ApiResponse<AuthResponseDTO> mockResponse =
+                new ApiResponse<>(200, "Login succeed", dummyAuthData);
+
         when(localAuthService.login(any(LoginRequestDTO.class))).thenReturn(mockResponse);
 
-        ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.login(request);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Login succeed", response.getBody().getMessage());
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "budi@sawit.com",
+                                  "password": "Password123"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Login succeed"))
+                .andExpect(jsonPath("$.data.accessToken").value("dummy.jwt.token"));
     }
 
     @Test
-    void testGoogleLogin_Success_ShouldReturn200() {
-        GoogleAuthRequestDTO request = new GoogleAuthRequestDTO();
-        ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(200, "Google Auth succeed", dummyAuthData);
+    void testGoogleLogin_Success_ShouldReturn200() throws Exception {
+        ApiResponse<AuthResponseDTO> mockResponse =
+                new ApiResponse<>(200, "Google Auth succeed", dummyAuthData);
+
         when(googleAuthService.authenticate(any(GoogleAuthRequestDTO.class))).thenReturn(mockResponse);
 
-        ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.googleLogin(request);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
+        mockMvc.perform(post("/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "idToken": "valid-google-token",
+                                  "role": "BURUH"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Google Auth succeed"))
+                .andExpect(jsonPath("$.data.accessToken").value("dummy.jwt.token"));
     }
 
     @Test
-    void testGoogleLogin_Failed_ShouldReturnErrorStatus() {
-        GoogleAuthRequestDTO request = new GoogleAuthRequestDTO();
-        ApiResponse<AuthResponseDTO> mockResponse = new ApiResponse<>(401, "Invalid Google Token", null);
+    void testGoogleLogin_Failed_ShouldReturnErrorStatus() throws Exception {
+        ApiResponse<AuthResponseDTO> mockResponse =
+                new ApiResponse<>(401, "Invalid Google Token", null);
+
         when(googleAuthService.authenticate(any(GoogleAuthRequestDTO.class))).thenReturn(mockResponse);
 
-        ResponseEntity<ApiResponse<AuthResponseDTO>> response = authController.googleLogin(request);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode()); // 401
-        assertNotNull(response.getBody());
-        assertEquals(401, response.getBody().getStatusCode());
+        mockMvc.perform(post("/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "idToken": "invalid-google-token",
+                                  "role": "BURUH"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid Google Token"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
-
-
 }
