@@ -74,7 +74,7 @@ class UserServiceImplTest {
         UserResponseDTO result = response.getData();
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("Berhasil mengambil profil", response.getMessage());
+        assertEquals("Successfully fetched profile", response.getMessage());
         assertNotNull(result);
         assertEquals(email, result.getEmail());
         assertEquals("Budi Buruh", result.getFullname());
@@ -95,7 +95,7 @@ class UserServiceImplTest {
         UserResponseDTO result = response.getData();
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("Berhasil mengambil profil", response.getMessage());
+        assertEquals("Successfully fetched profile", response.getMessage());
         assertNotNull(result);
         assertEquals(email, result.getEmail());
         assertEquals("MANDOR", result.getRole());
@@ -112,7 +112,7 @@ class UserServiceImplTest {
             userService.getMyProfile(email);
         });
 
-        assertEquals("Profil tidak ditemukan", exception.getMessage());
+        assertEquals("Profile not found", exception.getMessage());
     }
 
     // update-profile
@@ -134,7 +134,7 @@ class UserServiceImplTest {
         UserResponseDTO result = response.getData();
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("Berhasil memperbarui profil", response.getMessage());
+        assertEquals("Successfully updated profile", response.getMessage());
         assertNotNull(result);
         assertEquals("Budi Santoso", result.getFullname());
         assertEquals("budi_santoso", result.getUsername());
@@ -159,7 +159,7 @@ class UserServiceImplTest {
             userService.updateMyProfile(email, requestDTO);
         });
 
-        assertEquals("Username sudah digunakan oleh pengguna lain", exception.getMessage());
+        assertEquals("Username is already registered by someone else", exception.getMessage());
         verify(userRepository, never()).save(any());
     }
 
@@ -178,7 +178,7 @@ class UserServiceImplTest {
             userService.updateMyProfile(email, requestDTO);
         });
 
-        assertEquals("Profil tidak ditemukan", exception.getMessage());
+        assertEquals("Profile not found", exception.getMessage());
         verify(userRepository, never()).save(any());
     }
 }

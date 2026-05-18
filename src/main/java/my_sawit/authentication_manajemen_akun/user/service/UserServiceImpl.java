@@ -22,21 +22,21 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public ApiResponse<UserResponseDTO> getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         UserResponseDTO data =  ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
-        return ApiResponse.success("Berhasil mengambil profil", data);
+        return ApiResponse.success("Successfully fetched profile", data);
     }
 
     @Override
     @Transactional
     public ApiResponse<UserResponseDTO> updateMyProfile(String email, UserUpdateRequestDTO request) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         if (!request.getUsername().equals(user.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
-                throw new IllegalArgumentException("Username sudah digunakan oleh pengguna lain");
+                throw new IllegalArgumentException("Username is already registered by someone else");
             }
             user.setUsername(request.getUsername());
         }
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
         UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(updatedUser, mandorProfileRepository);
 
-        return ApiResponse.success("Berhasil memperbarui profil", data);
+        return ApiResponse.success("Successfully updated profile", data);
     }
 
 
