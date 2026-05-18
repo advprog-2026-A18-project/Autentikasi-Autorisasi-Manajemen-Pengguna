@@ -113,7 +113,7 @@ class InternalControllerTest {
 
     @Test
     void getUserDetail_HappyPath_ReturnsUser() throws Exception {
-        when(adminService.getUserDetail(eq(mockUserId)))
+        when(adminService.getUserDetail(mockUserId))
                 .thenReturn(ApiResponse.success("Successfully fetched detail user", mockUser));
 
         mockMvc.perform(get("/internal/user/{userId}", mockUserId)
