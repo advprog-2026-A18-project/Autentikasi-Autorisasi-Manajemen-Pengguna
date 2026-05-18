@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -15,9 +17,7 @@ import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
@@ -49,8 +49,6 @@ class GoogleAuthServiceImplTest {
     @Mock
     private GoogleIdToken.Payload mockPayload;
 
-    @Spy
-    @InjectMocks
     private GoogleAuthServiceImpl authService;
 
     private GoogleAuthRequestDTO request;
@@ -60,6 +58,16 @@ class GoogleAuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
+        AuthResponseMapper authResponseMapper = new AuthResponseMapper(jwtUtils, userResponseMapper);
+        authService = spy(new GoogleAuthServiceImpl(
+                userRepository,
+                roleRepository,
+                mandorProfileRepository,
+                refreshTokenService,
+                authResponseMapper
+        ));
+
         request = GoogleAuthRequestDTO.builder()
                 .idToken("dummy.google.token")
                 .build();
