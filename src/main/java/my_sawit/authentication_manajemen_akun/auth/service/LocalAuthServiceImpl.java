@@ -1,18 +1,16 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import lombok.RequiredArgsConstructor;
-import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
-import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
+import my_sawit.authentication_manajemen_akun.auth.service.registration.RegisteredUser;
+import my_sawit.authentication_manajemen_akun.auth.service.registration.RegistrationCommand;
+import my_sawit.authentication_manajemen_akun.auth.service.registration.UserRegistrationService;
+import my_sawit.authentication_manajemen_akun.common.exception.ApiException;
 import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
-import my_sawit.authentication_manajemen_akun.domain.model.Role;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
-import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
-import my_sawit.authentication_manajemen_akun.domain.repository.RoleRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,16 +22,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LocalAuthServiceImpl implements LocalAuthService {
 
-
-    private static final String ROLE_MANDOR = "MANDOR";
-    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String AUTH_PROVIDER_LOCAL = "LOCAL";
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final MandorProfileRepository mandorProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AuthResponseMapper authResponseMapper;
+    private final UserRegistrationService userRegistrationService;
 
     @Override
     @Transactional
@@ -47,46 +42,29 @@ public class LocalAuthServiceImpl implements LocalAuthService {
             return ApiResponse.badRequest("Email is already registered");
         }
 
-        if (ROLE_ADMIN.equalsIgnoreCase(request.getRole())) {
-            return ApiResponse.forbidden("Registration as ADMIN is not allowed");
+        RegistrationCommand command = new RegistrationCommand(
+                request.getUsername(),
+                request.getFullname(),
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getRole(),
+                request.getNomorSertifikasi(),
+                AUTH_PROVIDER_LOCAL
+        );
+
+        RegisteredUser registeredUser;
+        try {
+            registeredUser = userRegistrationService.register(command);
+        } catch (ApiException e) {
+            return ApiResponse.of(e.getStatus(), e.getMessage(), null);
         }
 
-
-        Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
-                .orElseThrow(() -> new BadRequestException("Role invalid: " + request.getRole()));
-
-        CheckerHelper.NomorSertifikasiCheckResult sertifikasiCheck =
-                CheckerHelper.validateNomorSertifikasiForMandor(
-                        userRole,
-                        request.getNomorSertifikasi(),
-                        mandorProfileRepository
-                );
-
-        if (!sertifikasiCheck.valid()) {
-            return ApiResponse.badRequest(sertifikasiCheck.message());
-        }
-
-        String nomorSertifikasi = sertifikasiCheck.nomorSertifikasi();
-
-        User newUser = User.builder()
-                .username(request.getUsername())
-                .fullname(request.getFullname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole)
-                .authProvider("LOCAL")
-                .build();
-        newUser = userRepository.save(newUser);
-
-        if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
-            MandorProfile mandorProfile = MandorProfile.builder()
-                    .user(newUser)
-                    .nomorSertifikasi(nomorSertifikasi)
-                    .build();
-            mandorProfileRepository.save(mandorProfile);
-        }
-        String refreshToken = refreshTokenService.createRefreshToken(newUser.getId()).getToken();
-        AuthResponseDTO authData = authResponseMapper.toDto(newUser, nomorSertifikasi, refreshToken);
+        String refreshToken = refreshTokenService.createRefreshToken(registeredUser.user().getId()).getToken();
+        AuthResponseDTO authData = authResponseMapper.toDto(
+                registeredUser.user(),
+                registeredUser.nomorSertifikasi(),
+                refreshToken
+        );
         return ApiResponse.created("Registration succeed, You are authenticated", authData);
     }
 
