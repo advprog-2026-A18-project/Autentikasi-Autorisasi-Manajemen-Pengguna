@@ -3,11 +3,10 @@ package my_sawit.authentication_manajemen_akun.user.service;
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
-import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,7 @@ import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final MandorProfileRepository mandorProfileRepository;
+    private final UserResponseMapper userResponseMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -26,7 +25,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Profile not found"));
 
-        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        UserResponseDTO data = userResponseMapper.toDto(user);
         return ApiResponse.success("Successfully fetched profile", data);
     }
 
@@ -47,7 +46,7 @@ public class UserServiceImpl implements UserService {
 
         User updatedUser = userRepository.save(user);
 
-        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(updatedUser, mandorProfileRepository);
+        UserResponseDTO data = userResponseMapper.toDto(updatedUser);
 
         return ApiResponse.success("Successfully updated profile", data);
     }

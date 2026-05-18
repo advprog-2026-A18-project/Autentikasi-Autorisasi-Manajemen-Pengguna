@@ -2,10 +2,10 @@ package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class MandorServiceImpl implements MandorService {
 
     private final UserRepository userRepository;
+    private final UserResponseMapper userResponseMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -36,7 +37,7 @@ public class MandorServiceImpl implements MandorService {
         }
 
         List<UserResponseDTO> data = bawahanList.stream()
-                .map(ConvertResponseHandler::convertToUserResponseDTO)
+                .map(userResponseMapper::toDtoWithoutMandorProfile)
                 .collect(Collectors.toList());
 
         return ApiResponse.success("Successfully fetched bawahan", data);

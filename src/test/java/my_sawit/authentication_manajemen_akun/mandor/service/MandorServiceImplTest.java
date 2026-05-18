@@ -1,15 +1,16 @@
 package my_sawit.authentication_manajemen_akun.mandor.service;
 
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO; // <-- Tambahkan import ini
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,7 +27,9 @@ class MandorServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
+    @Mock
+    private MandorProfileRepository mandorProfileRepository;
+
     private MandorServiceImpl mandorService;
 
     private User mockMandor;
@@ -34,6 +37,9 @@ class MandorServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
+        mandorService = new MandorServiceImpl(userRepository, userResponseMapper);
+
         Role mandorRole = Role.builder().name("MANDOR").build();
         Role buruhRole = Role.builder().name("BURUH").build();
 

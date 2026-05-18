@@ -3,6 +3,7 @@ package my_sawit.authentication_manajemen_akun.admin.service;
 import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.common.exception.ForbiddenException;
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -15,7 +16,6 @@ import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -46,7 +46,6 @@ class AdminServiceImplTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
-    @InjectMocks
     private AdminServiceImpl userService;
 
     private User mockBuruh;
@@ -59,6 +58,14 @@ class AdminServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
+        userService = new AdminServiceImpl(
+                userRepository,
+                mandorProfileRepository,
+                refreshTokenRepository,
+                userResponseMapper
+        );
+
         Role buruhRole = Role.builder().name("BURUH").build();
         Role supirRole = Role.builder().name("SUPIR").build();
         Role mandorRole = Role.builder().name("MANDOR").build();

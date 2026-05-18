@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.common.exception.ForbiddenException;
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.RefreshTokenRepository;
@@ -28,6 +28,7 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final MandorProfileRepository mandorProfileRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserResponseMapper userResponseMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -46,9 +47,7 @@ public class AdminServiceImpl implements AdminService {
 
         Page<User> usersPage = userRepository.searchUsers(name, email, role, pageable);
 
-        Page<UserResponseDTO> responsePage = usersPage.map(
-                user -> ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository)
-        );
+        Page<UserResponseDTO> responsePage = usersPage.map(userResponseMapper::toDto);
 
         PagingResponseDTO<UserResponseDTO> pagingData = PagingResponseDTO.<UserResponseDTO>builder()
                 .content(responsePage.getContent())
@@ -83,7 +82,7 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(mandor);
         userRepository.save(buruh);
-        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        UserResponseDTO data = userResponseMapper.toDto(buruh);
         return ApiResponse.success("Successfully assigned Mandor", data);
     }
 
@@ -99,7 +98,7 @@ public class AdminServiceImpl implements AdminService {
 
         buruh.setMandor(null);
         userRepository.save(buruh);
-        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(buruh, mandorProfileRepository);
+        UserResponseDTO data = userResponseMapper.toDto(buruh);
         return ApiResponse.success("Successfully unassign mandor", data);
     }
 
@@ -140,7 +139,7 @@ public class AdminServiceImpl implements AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User data not found"));
 
-        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        UserResponseDTO data = userResponseMapper.toDto(user);
         return ApiResponse.success("Successfully fetched detail user", data);
     }
 
