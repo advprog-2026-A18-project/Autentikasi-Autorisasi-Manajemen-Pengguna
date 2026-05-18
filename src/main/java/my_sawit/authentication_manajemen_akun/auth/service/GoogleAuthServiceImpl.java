@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -110,16 +111,18 @@ public class GoogleAuthServiceImpl implements OAuthService<GoogleAuthRequestDTO>
 
         Role userRole = roleChecker.get();
 
-        String nomorSertifikasi = null;
-        if (ROLE_MANDOR.equalsIgnoreCase(userRole.getName())) {
-            if (request.getNomorSertifikasi() == null || request.getNomorSertifikasi().isBlank()) {
-                return ApiResponse.badRequest("Mandor must fill Nomor Sertifikasi");
-            }
-            if (mandorProfileRepository.existsByNomorSertifikasi(request.getNomorSertifikasi())) {
-                return ApiResponse.badRequest("Nomor Sertifikasi is already registered");
-            }
-            nomorSertifikasi = request.getNomorSertifikasi();
+        CheckerHelper.NomorSertifikasiCheckResult sertifikasiCheck =
+                CheckerHelper.validateNomorSertifikasiForMandor(
+                        userRole,
+                        request.getNomorSertifikasi(),
+                        mandorProfileRepository
+                );
+
+        if (!sertifikasiCheck.valid()) {
+            return ApiResponse.badRequest(sertifikasiCheck.message());
         }
+
+        String nomorSertifikasi = sertifikasiCheck.nomorSertifikasi();
 
         User user = User.builder()
                 .username(username)
