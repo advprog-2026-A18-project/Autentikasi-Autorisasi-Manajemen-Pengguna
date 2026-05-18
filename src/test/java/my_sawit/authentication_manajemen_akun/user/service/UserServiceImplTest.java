@@ -1,5 +1,7 @@
 package my_sawit.authentication_manajemen_akun.user.service;
 
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -108,7 +110,7 @@ class UserServiceImplTest {
         String email = "ghost@sawit.com";
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.getMyProfile(email);
         });
 
@@ -155,7 +157,7 @@ class UserServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockBuruh));
         when(userRepository.existsByUsername("mandor_agus")).thenReturn(true);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             userService.updateMyProfile(email, requestDTO);
         });
 
@@ -174,7 +176,7 @@ class UserServiceImplTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.updateMyProfile(email, requestDTO);
         });
 

@@ -55,7 +55,7 @@ class AuthControllerTest {
     @Test
     void testRegister_ShouldReturn201() throws Exception {
         ApiResponse<AuthResponseDTO> mockResponse =
-                new ApiResponse<>(201, "Registration succeed", dummyAuthData);
+                ApiResponse.created("Registration succeed", dummyAuthData);
 
         when(localAuthService.register(any(RegisterRequestDTO.class))).thenReturn(mockResponse);
 
@@ -79,7 +79,7 @@ class AuthControllerTest {
     @Test
     void testLogin_ShouldReturn200() throws Exception {
         ApiResponse<AuthResponseDTO> mockResponse =
-                new ApiResponse<>(200, "Login succeed", dummyAuthData);
+                ApiResponse.success("Login succeed", dummyAuthData);
 
         when(localAuthService.login(any(LoginRequestDTO.class))).thenReturn(mockResponse);
 
@@ -100,7 +100,7 @@ class AuthControllerTest {
     @Test
     void testGoogleLogin_Success_ShouldReturn200() throws Exception {
         ApiResponse<AuthResponseDTO> mockResponse =
-                new ApiResponse<>(200, "Google Auth succeed", dummyAuthData);
+                ApiResponse.success("Google Auth succeed", dummyAuthData);
 
         when(googleAuthService.authenticate(any(GoogleAuthRequestDTO.class))).thenReturn(mockResponse);
 
@@ -121,7 +121,7 @@ class AuthControllerTest {
     @Test
     void testGoogleLogin_Failed_ShouldReturnErrorStatus() throws Exception {
         ApiResponse<AuthResponseDTO> mockResponse =
-                new ApiResponse<>(401, "Invalid Google Token", null);
+                ApiResponse.unauthorized("Invalid Google Token");
 
         when(googleAuthService.authenticate(any(GoogleAuthRequestDTO.class))).thenReturn(mockResponse);
 

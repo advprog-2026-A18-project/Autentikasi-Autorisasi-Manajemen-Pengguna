@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.internal.controller;
 
 import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -106,9 +107,9 @@ class InternalControllerTest {
 
         mockMvc.perform(get("/internal/user/search")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Database timeout"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.statusCode").value(500))
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 
     @Test
@@ -138,12 +139,12 @@ class InternalControllerTest {
     void getUserDetail_UnhappyPath_UserNotFound() throws Exception {
         UUID randomId = UUID.randomUUID();
         when(adminService.getUserDetail(eq(randomId)))
-                .thenThrow(new IllegalArgumentException("User tidak ditemukan"));
+                .thenThrow(new NotFoundException("User tidak ditemukan"));
 
         mockMvc.perform(get("/internal/user/{userId}", randomId)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("User tidak ditemukan"));
     }
 }

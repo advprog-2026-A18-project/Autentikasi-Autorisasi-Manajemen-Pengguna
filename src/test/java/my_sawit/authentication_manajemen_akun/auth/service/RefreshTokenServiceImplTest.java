@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.exception.UnauthorizedException;
 import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
 import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
@@ -117,7 +119,7 @@ class RefreshTokenServiceImplTest {
     void createRefreshTokenFailedIfUserNotFound_ShouldThrowException() {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(NotFoundException.class, () -> {
             refreshTokenService.createRefreshToken(userId);
         });
     }
@@ -129,7 +131,7 @@ class RefreshTokenServiceImplTest {
                 .expiryDate(Instant.now().minusSeconds(10))
                 .build();
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(UnauthorizedException.class, () -> {
             refreshTokenService.verifyExpiration(expiredToken);
         });
 
@@ -243,7 +245,7 @@ class RefreshTokenServiceImplTest {
 
         when(refreshTokenRepository.findByToken(invalidToken)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class, () -> {
             refreshTokenService.refreshAccessToken(invalidToken);
         });
 

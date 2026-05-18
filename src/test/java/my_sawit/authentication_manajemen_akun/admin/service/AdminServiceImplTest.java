@@ -1,5 +1,8 @@
 package my_sawit.authentication_manajemen_akun.admin.service;
 
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.ForbiddenException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -208,8 +211,8 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void searchUsers_WithInvalidRole_ShouldThrowIllegalArgumentException() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+    void searchUsers_WithInvalidRole_ShouldThrowBadRequestException() {
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             userService.searchUsers(null, null, "HACKER", 0, 10);
         });
 
@@ -312,7 +315,7 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.assignMandor(fiktifId, mandorId);
         });
 
@@ -327,7 +330,7 @@ class AdminServiceImplTest {
         when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
         when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.assignMandor(buruhId, fiktifId);
         });
 
@@ -342,7 +345,7 @@ class AdminServiceImplTest {
         when(userRepository.findById(supirId)).thenReturn(Optional.of(mockSupir));
         when(userRepository.findById(mandorId)).thenReturn(Optional.of(mockMandor));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             userService.assignMandor(supirId, mandorId);
         });
 
@@ -357,7 +360,7 @@ class AdminServiceImplTest {
         when(userRepository.findById(buruhId)).thenReturn(Optional.of(mockBuruh));
         when(userRepository.findById(atasanId)).thenReturn(Optional.of(mockSupir));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             userService.assignMandor(buruhId, atasanId);
         });
 
@@ -386,7 +389,7 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(targetId)).thenReturn(Optional.of(mockMandor));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             userService.unassignMandor(targetId);
         });
 
@@ -446,7 +449,7 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(targetId)).thenReturn(Optional.of(mockAdmin));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ForbiddenException exception = assertThrows(ForbiddenException.class, () -> {
             userService.deleteUser(targetId, currentAdminEmail);
         });
 
@@ -462,7 +465,7 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(targetId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.deleteUser(targetId, currentAdminEmail);
         });
 
@@ -514,7 +517,7 @@ class AdminServiceImplTest {
 
         when(userRepository.findById(fiktifId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             userService.getUserDetail(fiktifId);
         });
 
