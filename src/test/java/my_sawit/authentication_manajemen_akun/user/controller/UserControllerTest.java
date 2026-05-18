@@ -54,14 +54,14 @@ class UserControllerTest {
                 .build();
 
         when(userService.getMyProfile("budi@sawit.com"))
-                .thenReturn(ApiResponse.success("Berhasil mengambil profil", mockResponse));
+                .thenReturn(ApiResponse.success("Successfully fetched profile", mockResponse));
 
         mockMvc.perform(get("/users/me")
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.message").value("Berhasil mengambil profil"))
+                .andExpect(jsonPath("$.message").value("Successfully fetched profile"))
                 .andExpect(jsonPath("$.data.email").value("budi@sawit.com"))
                 .andExpect(jsonPath("$.data.fullname").value("Budi Buruh"))
                 .andExpect(jsonPath("$.data.role").value("BURUH"));
@@ -70,14 +70,14 @@ class UserControllerTest {
     @Test
     void getMyProfile_ShouldReturnBadRequest_WhenProfileNotFound() throws Exception {
         when(userService.getMyProfile("budi@sawit.com"))
-                .thenThrow(new RuntimeException("Profil tidak ditemukan"));
+                .thenThrow(new RuntimeException("Profile not found"));
 
         mockMvc.perform(get("/users/me")
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Profil tidak ditemukan"));
+                .andExpect(jsonPath("$.message").value("Profile not found"));
     }
 
     @Test
@@ -91,7 +91,7 @@ class UserControllerTest {
                 .build();
 
         when(userService.updateMyProfile(eq("budi@sawit.com"), any()))
-                .thenReturn(ApiResponse.success("Berhasil memperbarui profil", mockResponse));
+                .thenReturn(ApiResponse.success("Successfully updated profile", mockResponse));
 
         mockMvc.perform(put("/users/me")
                         .principal(mockPrincipal)
@@ -104,7 +104,7 @@ class UserControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.message").value("Berhasil memperbarui profil"))
+                .andExpect(jsonPath("$.message").value("Successfully updated profile"))
                 .andExpect(jsonPath("$.data.fullname").value("Budi Santoso"))
                 .andExpect(jsonPath("$.data.username").value("budi_santoso"));
     }
@@ -112,7 +112,7 @@ class UserControllerTest {
     @Test
     void updateMyProfile_ShouldReturnBadRequest_WhenUsernameTaken() throws Exception {
         when(userService.updateMyProfile(eq("budi@sawit.com"), any()))
-                .thenThrow(new IllegalArgumentException("Username sudah digunakan oleh pengguna lain"));
+                .thenThrow(new IllegalArgumentException("Username is already registered by someone else"));
 
         mockMvc.perform(put("/users/me")
                         .principal(mockPrincipal)
@@ -125,7 +125,7 @@ class UserControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Username sudah digunakan oleh pengguna lain"));
+                .andExpect(jsonPath("$.message").value("Username is already registered by someone else"));
     }
 
     @Test
