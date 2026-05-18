@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RoleSeeder implements CommandLineRunner {
+public class GeneralSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
@@ -34,6 +34,11 @@ public class RoleSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        seedRoles();
+        seedAdminAccount();
+    }
+
+    private void seedRoles() {
         String[] roles = {"BURUH", "MANDOR", "ADMIN", "SUPIR"};
 
         for (String roleName : roles) {
@@ -43,18 +48,17 @@ public class RoleSeeder implements CommandLineRunner {
                         .build();
                 roleRepository.save(newRole);
 
-                log.info("Seeder: Role '{}' berhasil ditambahkan ke database.", roleName);
+                log.info("Seeder: Role '{}' successfully added to database.", roleName);
             }
         }
+    }
 
-        // SEEDNING akun ADMIN
-
+    private void seedAdminAccount() {
         if (!userRepository.existsByEmail(adminEmail)) {
 
             Role adminRole = roleRepository.findByName("ADMIN")
-                    .orElseThrow(() -> new RuntimeException("Role ADMIN tidak ditemukan"));
+                    .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
-            // Buat akunnya
             User superAdmin = User.builder()
                     .username(adminUsername)
                     .fullname(adminFullname)
@@ -65,8 +69,7 @@ public class RoleSeeder implements CommandLineRunner {
                     .build();
 
             userRepository.save(superAdmin);
-            log.info("Seeder: Akun Admin Utama berhasil dibuat! (Email: {})", adminEmail);
+            log.info("Seeder: Admin Utama successfully created! (Email: {})", adminEmail);
         }
-
     }
 }

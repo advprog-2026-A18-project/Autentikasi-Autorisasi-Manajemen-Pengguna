@@ -1,5 +1,6 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
@@ -126,7 +127,7 @@ class LocalAuthServiceImplTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.register(registerReq));
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> authService.register(registerReq));
         assertTrue(exception.getMessage().contains("Role invalid"));
     }
 

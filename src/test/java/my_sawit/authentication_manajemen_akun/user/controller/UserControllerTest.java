@@ -1,5 +1,7 @@
 package my_sawit.authentication_manajemen_akun.user.controller;
 
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.security.JwtUtils;
@@ -68,15 +70,15 @@ class UserControllerTest {
     }
 
     @Test
-    void getMyProfile_ShouldReturnBadRequest_WhenProfileNotFound() throws Exception {
+    void getMyProfile_ShouldReturnNotFound_WhenProfileNotFound() throws Exception {
         when(userService.getMyProfile("budi@sawit.com"))
-                .thenThrow(new RuntimeException("Profile not found"));
+                .thenThrow(new NotFoundException("Profile not found"));
 
         mockMvc.perform(get("/users/me")
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("Profile not found"));
     }
 
@@ -112,7 +114,7 @@ class UserControllerTest {
     @Test
     void updateMyProfile_ShouldReturnBadRequest_WhenUsernameTaken() throws Exception {
         when(userService.updateMyProfile(eq("budi@sawit.com"), any()))
-                .thenThrow(new IllegalArgumentException("Username is already registered by someone else"));
+                .thenThrow(new BadRequestException("Username is already registered by someone else"));
 
         mockMvc.perform(put("/users/me")
                         .principal(mockPrincipal)

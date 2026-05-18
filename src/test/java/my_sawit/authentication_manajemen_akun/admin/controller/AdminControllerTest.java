@@ -1,6 +1,9 @@
 package my_sawit.authentication_manajemen_akun.admin.controller;
 
 import my_sawit.authentication_manajemen_akun.admin.service.AdminService;
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.ForbiddenException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -127,7 +130,7 @@ class AdminControllerTest {
     @Test
     void searchUsers_WithInvalidRole_ShouldReturnBadRequest() throws Exception {
         when(adminService.searchUsers(isNull(), isNull(), eq("HACKER"), eq(0), eq(10)))
-                .thenThrow(new IllegalArgumentException("Role invalid: HACKER"));
+                .thenThrow(new BadRequestException("Role invalid: HACKER"));
 
         mockMvc.perform(get("/admin/users")
                         .param("role", "HACKER")
@@ -186,7 +189,7 @@ class AdminControllerTest {
         UUID mandorId = UUID.randomUUID();
 
         when(adminService.assignMandor(supirId, mandorId))
-                .thenThrow(new IllegalArgumentException("The user who will be assigned has to have BURUH role."));
+                .thenThrow(new BadRequestException("The user who will be assigned has to have BURUH role."));
 
         mockMvc.perform(put("/admin/users/{buruhId}/assign-mandor/{mandorId}", supirId, mandorId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -199,11 +202,12 @@ class AdminControllerTest {
         UUID fiktifId = UUID.randomUUID();
 
         when(adminService.unassignMandor(fiktifId))
-                .thenThrow(new RuntimeException("Data Buruh not found"));
+                .thenThrow(new NotFoundException("Data Buruh not found"));
 
         mockMvc.perform(put("/admin/users/{buruhId}/unassign-mandor", fiktifId)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("Data Buruh not found"));
     }
 
@@ -230,13 +234,14 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         when(adminService.deleteUser(targetId, "admin@sawit.com"))
-                .thenThrow(new IllegalArgumentException("Admin can't be deleted"));
+                .thenThrow(new ForbiddenException("Admin can't be deleted."));
 
         mockMvc.perform(delete("/admin/users/{userId}", targetId)
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Admin can't be deleted"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.statusCode").value(403))
+                .andExpect(jsonPath("$.message").value("Admin can't be deleted."));
     }
 
     @Test
@@ -245,12 +250,13 @@ class AdminControllerTest {
         Principal mockPrincipal = () -> "admin@sawit.com";
 
         when(adminService.deleteUser(fiktifId, "admin@sawit.com"))
-                .thenThrow(new RuntimeException("User data not found"));
+                .thenThrow(new NotFoundException("User data not found"));
 
         mockMvc.perform(delete("/admin/users/{userId}", fiktifId)
                         .principal(mockPrincipal)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("User data not found"));
     }
 
@@ -282,11 +288,12 @@ class AdminControllerTest {
         UUID fiktifId = UUID.randomUUID();
 
         when(adminService.getUserDetail(fiktifId))
-                .thenThrow(new RuntimeException("User data not found"));
+                .thenThrow(new NotFoundException("User data not found"));
 
         mockMvc.perform(get("/admin/users/{userId}", fiktifId)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
                 .andExpect(jsonPath("$.message").value("User data not found"));
     }
 }

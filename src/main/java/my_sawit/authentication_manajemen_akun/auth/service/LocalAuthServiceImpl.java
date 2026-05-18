@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
@@ -54,7 +55,7 @@ public class LocalAuthServiceImpl implements LocalAuthService {
 
 
         Role userRole = roleRepository.findByName(request.getRole().toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException("Role invalid: " + request.getRole()));
+                .orElseThrow(() -> new BadRequestException("Role invalid: " + request.getRole()));
 
         CheckerHelper.NomorSertifikasiCheckResult sertifikasiCheck =
                 CheckerHelper.validateNomorSertifikasiForMandor(

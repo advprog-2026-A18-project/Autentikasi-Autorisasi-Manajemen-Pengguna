@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.user.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.request.UserUpdateRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
@@ -22,9 +24,9 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public ApiResponse<UserResponseDTO> getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new NotFoundException("Profile not found"));
 
-        UserResponseDTO data =  ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
         return ApiResponse.success("Successfully fetched profile", data);
     }
 
@@ -32,11 +34,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public ApiResponse<UserResponseDTO> updateMyProfile(String email, UserUpdateRequestDTO request) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new NotFoundException("Profile not found"));
 
         if (!request.getUsername().equals(user.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
-                throw new IllegalArgumentException("Username is already registered by someone else");
+                throw new BadRequestException("Username is already registered by someone else");
             }
             user.setUsername(request.getUsername());
         }
