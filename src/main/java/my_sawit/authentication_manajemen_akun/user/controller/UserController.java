@@ -21,24 +21,16 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getMyProfile(Principal principal) {
-        UserResponseDTO profile = userService.getMyProfile(principal.getName());
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Berhasil mengambil profil",
-                profile
-        ));
+        ApiResponse<UserResponseDTO> response = userService.getMyProfile(principal.getName());
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @PutMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponseDTO>> updateMyProfile(Principal principal, @Valid @RequestBody UserUpdateRequestDTO request) {
-
-        UserResponseDTO updatedProfile = userService.updateMyProfile(principal.getName(), request);
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Berhasil memperbarui profil",
-                updatedProfile
-        ));
+    public ResponseEntity<ApiResponse<UserResponseDTO>> updateMyProfile(
+            Principal principal,
+            @Valid @RequestBody UserUpdateRequestDTO request
+    ) {
+        ApiResponse<UserResponseDTO> response = userService.updateMyProfile(principal.getName(), request);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

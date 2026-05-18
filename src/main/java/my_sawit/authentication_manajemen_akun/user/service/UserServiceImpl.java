@@ -9,6 +9,7 @@ import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRep
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +20,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getMyProfile(String email) {
+    public ApiResponse<UserResponseDTO> getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
 
-        return ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        UserResponseDTO data =  ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
+        return ApiResponse.success("Berhasil mengambil profil", data);
     }
 
     @Override
     @Transactional
-    public UserResponseDTO updateMyProfile(String email, UserUpdateRequestDTO request) {
+    public ApiResponse<UserResponseDTO> updateMyProfile(String email, UserUpdateRequestDTO request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
 
@@ -43,7 +45,9 @@ public class UserServiceImpl implements UserService {
 
         User updatedUser = userRepository.save(user);
 
-        return ConvertResponseHandler.convertToUserResponseDTO(updatedUser, mandorProfileRepository);
+        UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(updatedUser, mandorProfileRepository);
+
+        return ApiResponse.success("Berhasil memperbarui profil", data);
     }
 
 
