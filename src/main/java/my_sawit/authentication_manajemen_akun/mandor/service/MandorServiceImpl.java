@@ -2,6 +2,7 @@ package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO;
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
@@ -20,13 +21,9 @@ public class MandorServiceImpl implements MandorService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> getMyBawahan(String email, BawahanSearchRequestDTO request) {
+    public ApiResponse<List<UserResponseDTO>> getMyBawahan(String email, BawahanSearchRequestDTO request) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profil tidak ditemukan"));
-
-        if (user.getRole() == null || !"MANDOR".equalsIgnoreCase(user.getRole().getName())) {
-            throw new RuntimeException("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan");
-        }
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         String searchName = (request != null) ? request.getName() : null;
 
@@ -37,9 +34,11 @@ public class MandorServiceImpl implements MandorService {
             bawahanList = userRepository.findByMandor(user);
         }
 
-        return bawahanList.stream()
+        List<UserResponseDTO> data = bawahanList.stream()
                 .map(ConvertResponseHandler::convertToUserResponseDTO)
                 .collect(Collectors.toList());
+
+        return ApiResponse.success("Successfully fetched bawahan", data);
     }
 
 
