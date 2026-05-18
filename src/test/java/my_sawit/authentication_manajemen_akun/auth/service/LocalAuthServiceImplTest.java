@@ -127,7 +127,7 @@ class LocalAuthServiceImplTest {
         when(roleRepository.findByName(anyString())).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.register(registerReq));
-        assertTrue(exception.getMessage().contains("Role tidak valid"));
+        assertTrue(exception.getMessage().contains("Role invalid"));
     }
 
     @Test
