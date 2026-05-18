@@ -3,6 +3,8 @@ package my_sawit.authentication_manajemen_akun.auth.service;
 
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.common.exception.UnauthorizedException;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
 import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
@@ -49,6 +51,9 @@ class RefreshTokenServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
+        AuthResponseMapper authResponseMapper = new AuthResponseMapper(jwtUtils, userResponseMapper);
+
         userId = UUID.randomUUID();
         mockUser = User.builder()
                 .id(userId)
@@ -58,8 +63,7 @@ class RefreshTokenServiceImplTest {
         refreshTokenService = new RefreshTokenServiceImpl(
                 refreshTokenRepository,
                 userRepository,
-                jwtUtils,
-                mandorProfileRepository
+                authResponseMapper
         );
         org.springframework.test.util.ReflectionTestUtils.setField(
                 refreshTokenService,

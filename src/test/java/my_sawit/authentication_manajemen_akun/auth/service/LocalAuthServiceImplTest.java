@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
@@ -16,7 +18,6 @@ import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,7 +47,6 @@ class LocalAuthServiceImplTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
-    @InjectMocks
     private LocalAuthServiceImpl authService;
 
     private RegisterRequestDTO registerReq;
@@ -57,6 +57,17 @@ class LocalAuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        UserResponseMapper userResponseMapper = new UserResponseMapper(mandorProfileRepository);
+        AuthResponseMapper authResponseMapper = new AuthResponseMapper(jwtUtils, userResponseMapper);
+        authService = new LocalAuthServiceImpl(
+                userRepository,
+                roleRepository,
+                mandorProfileRepository,
+                passwordEncoder,
+                refreshTokenService,
+                authResponseMapper
+        );
+
         mockRole = Role.builder().id(UUID.randomUUID()).name("BURUH").build();
 
         mockUser = User.builder()

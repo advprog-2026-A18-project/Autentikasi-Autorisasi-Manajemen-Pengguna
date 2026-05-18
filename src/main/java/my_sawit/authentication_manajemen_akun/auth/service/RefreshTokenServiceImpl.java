@@ -3,12 +3,9 @@ package my_sawit.authentication_manajemen_akun.auth.service;
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.common.exception.UnauthorizedException;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
-import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
-import my_sawit.authentication_manajemen_akun.domain.model.MandorProfile;
-import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
-import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
 import my_sawit.authentication_manajemen_akun.domain.model.RefreshToken;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
@@ -21,8 +18,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
-
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
@@ -32,8 +27,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-    private final JwtUtils jwtUtils;
-    private final MandorProfileRepository mandorProfileRepository;
+    private final AuthResponseMapper authResponseMapper;
 
     @Override
     @Transactional
@@ -87,16 +81,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         AuthResponseDTO authData = findByToken(requestRefreshToken)
                 .map(this::verifyExpiration)
                 .map(RefreshToken::getUser)
-                .map(user -> {
-                    String nomorSertifikasi = null;
-                    if ("MANDOR".equalsIgnoreCase(user.getRole().getName())) {
-                        Optional<MandorProfile> mandorProfile = mandorProfileRepository.findByUser(user);
-                        if (mandorProfile.isPresent()) {
-                            nomorSertifikasi = mandorProfile.get().getNomorSertifikasi();
-                        }
-                    }
-                    return convertToAuthResponseDTO(user, nomorSertifikasi, requestRefreshToken, jwtUtils);
-                }).orElseThrow(() -> new UnauthorizedException("Refresh token is not in database!"));
+                .map(user -> authResponseMapper.toDto(user, requestRefreshToken))
+                .orElseThrow(() -> new UnauthorizedException("Refresh token is not in database!"));
         return ApiResponse.success("Token refreshed successfully", authData);
     }
 
