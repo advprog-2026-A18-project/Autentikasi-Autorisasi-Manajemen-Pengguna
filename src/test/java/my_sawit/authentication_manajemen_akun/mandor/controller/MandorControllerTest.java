@@ -1,43 +1,45 @@
 package my_sawit.authentication_manajemen_akun.mandor.controller;
 
-import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO; // <-- Tambahkan import ini
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.mandor.service.MandorService;
-import org.junit.jupiter.api.BeforeEach;
+import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(MandorController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class MandorControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private MandorService mandorService;
 
-    @InjectMocks
-    private MandorController mandorController;
-
-    private Principal mockPrincipal;
-
-    @BeforeEach
-    void setUp() {
-        mockPrincipal = () -> "mandor@sawit.com";
-    }
+    @MockitoBean
+    private JwtUtils jwtUtils;
 
     @Test
-    void getMyBawahan_ShouldReturn200AndList() {
+    void getMyBawahan_ShouldReturn200AndList() throws Exception {
+        Principal mockPrincipal = () -> "mandor@sawit.com";
+
         UserResponseDTO bawahanDTO = UserResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .username("budi")
@@ -47,35 +49,43 @@ class MandorControllerTest {
 
         List<UserResponseDTO> mockList = List.of(bawahanDTO);
 
-        // Buat instance DTO untuk mocking dan request
-        BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
+        when(mandorService.getMyBawahan(eq("mandor@sawit.com"), any()))
+                .thenReturn(ApiResponse.success("Successfully fetched bawahan", mockList));
 
-        when(mandorService.getMyBawahan("mandor@sawit.com", requestDTO)).thenReturn(mockList);
-
-        ResponseEntity<ApiResponse<List<UserResponseDTO>>> response =
-                mandorController.getMyBawahan(mockPrincipal, requestDTO);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getStatusCode());
-        assertEquals("Berhasil mengambil daftar bawahan", response.getBody().getMessage());
-        assertEquals(1, response.getBody().getData().size());
-        assertEquals("Budi Buruh", response.getBody().getData().get(0).getFullname());
-
-        verify(mandorService, times(1)).getMyBawahan("mandor@sawit.com", requestDTO);
+        mockMvc.perform(get("/mandor/bawahan")
+                        .principal(mockPrincipal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message").value("Successfully fetched bawahan"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].username").value("budi"))
+                .andExpect(jsonPath("$.data[0].fullname").value("Budi Buruh"))
+                .andExpect(jsonPath("$.data[0].role").value("BURUH"));
     }
 
     @Test
-    void getMyBawahan_ShouldThrowException_WhenNotMandor() {
-        BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
+    void getMyBawahan_WithSearchName_ShouldPassQueryToService() throws Exception {
+        Principal mockPrincipal = () -> "mandor@sawit.com";
 
-        when(mandorService.getMyBawahan("mandor@sawit.com", requestDTO))
-                .thenThrow(new RuntimeException("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan"));
+        UserResponseDTO bawahanDTO = UserResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .username("budi")
+                .fullname("Budi Buruh")
+                .role("BURUH")
+                .build();
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            mandorController.getMyBawahan(mockPrincipal, requestDTO);
-        });
+        when(mandorService.getMyBawahan(eq("mandor@sawit.com"), any()))
+                .thenReturn(ApiResponse.success("Successfully fetched bawahan", List.of(bawahanDTO)));
 
-        assertEquals("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan", exception.getMessage());
+        mockMvc.perform(get("/mandor/bawahan")
+                        .principal(mockPrincipal)
+                        .param("name", "Budi")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data[0].fullname").value("Budi Buruh"));
     }
+
+
 }

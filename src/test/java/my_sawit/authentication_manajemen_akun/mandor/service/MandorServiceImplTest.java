@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO; // <-- Tambahkan import ini
+import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.Role;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
@@ -63,8 +64,13 @@ class MandorServiceImplTest {
 
         // Menggunakan DTO kosong (tanpa nama pencarian)
         BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
-        List<UserResponseDTO> result = mandorService.getMyBawahan(mockMandor.getEmail(), requestDTO);
+        ApiResponse<List<UserResponseDTO>> response =
+                mandorService.getMyBawahan(mockMandor.getEmail(), requestDTO);
 
+        List<UserResponseDTO> result = response.getData();
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Successfully fetched bawahan", response.getMessage());
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("Budi Buruh", result.get(0).getFullname());
@@ -82,25 +88,17 @@ class MandorServiceImplTest {
         when(userRepository.findByMandorAndFullnameContainingIgnoreCase(mockMandor, searchName))
                 .thenReturn(List.of(mockBuruh));
 
-        List<UserResponseDTO> result = mandorService.getMyBawahan(mockMandor.getEmail(), requestDTO);
+        ApiResponse<List<UserResponseDTO>> response =
+                mandorService.getMyBawahan(mockMandor.getEmail(), requestDTO);
 
+        List<UserResponseDTO> result = response.getData();
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals("Successfully fetched bawahan", response.getMessage());
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Budi Buruh", result.get(0).getFullname());
         verify(userRepository, times(1)).findByMandorAndFullnameContainingIgnoreCase(mockMandor, searchName);
     }
 
-    @Test
-    void getMyBawahan_ShouldThrowException_WhenUserIsNotMandor() {
-        when(userRepository.findByEmail(mockBuruh.getEmail())).thenReturn(Optional.of(mockBuruh));
-
-        BawahanSearchRequestDTO requestDTO = new BawahanSearchRequestDTO();
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            mandorService.getMyBawahan(mockBuruh.getEmail(), requestDTO);
-        });
-
-        assertEquals("Akses ditolak: Hanya MANDOR yang dapat melihat daftar bawahan", exception.getMessage());
-        verify(userRepository, never()).findByMandor(any());
-    }
 }

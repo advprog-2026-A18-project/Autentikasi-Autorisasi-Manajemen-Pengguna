@@ -24,13 +24,13 @@ public class MandorController {
     private final MandorService mandorService;
 
     @GetMapping("/bawahan")
-    public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getMyBawahan(Principal principal, @ModelAttribute BawahanSearchRequestDTO request ) {
-        List<UserResponseDTO> bawahanList = mandorService.getMyBawahan(principal.getName(), request);
+    public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getMyBawahan(
+            Principal principal,
+            @ModelAttribute BawahanSearchRequestDTO request
+    ) {
+        ApiResponse<List<UserResponseDTO>> response =
+                mandorService.getMyBawahan(principal.getName(), request);
 
-        return ResponseEntity.ok(new ApiResponse<>(
-                200,
-                "Berhasil mengambil daftar bawahan",
-                bawahanList
-        ));
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }
