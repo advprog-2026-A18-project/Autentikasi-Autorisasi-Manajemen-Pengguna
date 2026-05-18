@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
@@ -105,14 +106,9 @@ public class LocalAuthServiceImpl implements LocalAuthService {
             return ApiResponse.unauthorized("Incorrect email or password");
         }
 
-        String nomorSertifikasi = null;
+        String nomorSertifikasi = CheckerHelper.fetchNomorSertifikasi(mandorProfileRepository, user);
 
-        if (ROLE_MANDOR.equalsIgnoreCase(user.getRole().getName())) {
-            Optional<MandorProfile> mandorProfileOpt = mandorProfileRepository.findByUser(user);
-            if (mandorProfileOpt.isPresent()) {
-                nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
-            }
-        }
+
         AuthResponseDTO authData = convertToAuthResponseDTO(user, nomorSertifikasi, refreshTokenService, jwtUtils);
         return ApiResponse.success("Login succeed! You are authenticated", authData);
     }
