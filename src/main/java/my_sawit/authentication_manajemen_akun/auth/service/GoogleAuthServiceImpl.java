@@ -7,6 +7,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.GoogleAuthRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
@@ -16,7 +17,6 @@ import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.RoleRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
-import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +26,6 @@ import java.util.Optional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.UUID;
-
-import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
 
 @Slf4j
 @Service
@@ -40,8 +38,8 @@ public class GoogleAuthServiceImpl implements OAuthService<GoogleAuthRequestDTO>
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final MandorProfileRepository mandorProfileRepository;
-    private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
+    private final AuthResponseMapper authResponseMapper;
 
     @Value("${app.google.clientId}")
     private String googleClientId;
@@ -82,15 +80,8 @@ public class GoogleAuthServiceImpl implements OAuthService<GoogleAuthRequestDTO>
 
 
     private ApiResponse<AuthResponseDTO> processExistingUser(User user) {
-        String nomorSertifikasi = null;
-
-        if (ROLE_MANDOR.equalsIgnoreCase(user.getRole().getName())) {
-            Optional<MandorProfile> mandorProfileOpt = mandorProfileRepository.findByUser(user);
-            if (mandorProfileOpt.isPresent()) {
-                nomorSertifikasi = mandorProfileOpt.get().getNomorSertifikasi();
-            }
-        }
-        AuthResponseDTO authResponseDTO = convertToAuthResponseDTO(user, nomorSertifikasi, refreshTokenService, jwtUtils);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId()).getToken();
+        AuthResponseDTO authResponseDTO = authResponseMapper.toDto(user, refreshToken);
         return ApiResponse.success("Google Auth succeed! You are authenticated", authResponseDTO);
     }
 
@@ -141,7 +132,8 @@ public class GoogleAuthServiceImpl implements OAuthService<GoogleAuthRequestDTO>
                     .build();
             mandorProfileRepository.save(mandorProfile);
         }
-        AuthResponseDTO authResponseDTO = convertToAuthResponseDTO(user, nomorSertifikasi, refreshTokenService, jwtUtils);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId()).getToken();
+        AuthResponseDTO authResponseDTO = authResponseMapper.toDto(user, nomorSertifikasi, refreshToken);
         return ApiResponse.created("Google registration succeed! You are authenticated", authResponseDTO);
     }
 

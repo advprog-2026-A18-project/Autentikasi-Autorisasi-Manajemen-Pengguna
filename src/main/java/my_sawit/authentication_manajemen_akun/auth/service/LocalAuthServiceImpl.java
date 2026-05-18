@@ -3,6 +3,7 @@ package my_sawit.authentication_manajemen_akun.auth.service;
 import lombok.RequiredArgsConstructor;
 import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
 import my_sawit.authentication_manajemen_akun.common.helper.CheckerHelper;
+import my_sawit.authentication_manajemen_akun.common.mapper.AuthResponseMapper;
 import my_sawit.authentication_manajemen_akun.dto.request.LoginRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.request.RegisterRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
@@ -13,14 +14,11 @@ import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.RoleRepository;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
-import my_sawit.authentication_manajemen_akun.security.JwtUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-
-import static my_sawit.authentication_manajemen_akun.common.helper.ConvertResponseHandler.convertToAuthResponseDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +33,7 @@ public class LocalAuthServiceImpl implements LocalAuthService {
     private final MandorProfileRepository mandorProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
-    private final JwtUtils jwtUtils;
+    private final AuthResponseMapper authResponseMapper;
 
     @Override
     @Transactional
@@ -87,7 +85,8 @@ public class LocalAuthServiceImpl implements LocalAuthService {
                     .build();
             mandorProfileRepository.save(mandorProfile);
         }
-        AuthResponseDTO authData = convertToAuthResponseDTO(newUser, nomorSertifikasi, refreshTokenService, jwtUtils);
+        String refreshToken = refreshTokenService.createRefreshToken(newUser.getId()).getToken();
+        AuthResponseDTO authData = authResponseMapper.toDto(newUser, nomorSertifikasi, refreshToken);
         return ApiResponse.created("Registration succeed, You are authenticated", authData);
     }
 
@@ -107,10 +106,8 @@ public class LocalAuthServiceImpl implements LocalAuthService {
             return ApiResponse.unauthorized("Incorrect email or password");
         }
 
-        String nomorSertifikasi = CheckerHelper.fetchNomorSertifikasi(mandorProfileRepository, user);
-
-
-        AuthResponseDTO authData = convertToAuthResponseDTO(user, nomorSertifikasi, refreshTokenService, jwtUtils);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId()).getToken();
+        AuthResponseDTO authData = authResponseMapper.toDto(user, refreshToken);
         return ApiResponse.success("Login succeed! You are authenticated", authData);
     }
 
