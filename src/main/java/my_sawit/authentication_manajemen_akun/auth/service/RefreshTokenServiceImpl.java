@@ -1,6 +1,8 @@
 package my_sawit.authentication_manajemen_akun.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
+import my_sawit.authentication_manajemen_akun.common.exception.UnauthorizedException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.AuthResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -37,7 +39,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Optional<RefreshToken> existingToken = refreshTokenRepository.findByUser(user);
 
@@ -62,7 +64,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token expired. Please login again.");
+            throw new UnauthorizedException("Refresh token expired. Please login again.");
         }
         return token;
     }
@@ -94,7 +96,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                         }
                     }
                     return convertToAuthResponseDTO(user, nomorSertifikasi, requestRefreshToken, jwtUtils);
-                }).orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+                }).orElseThrow(() -> new UnauthorizedException("Refresh token is not in database!"));
         return ApiResponse.success("Token refreshed successfully", authData);
     }
 

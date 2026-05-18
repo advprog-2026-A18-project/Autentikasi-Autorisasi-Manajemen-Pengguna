@@ -1,6 +1,9 @@
 package my_sawit.authentication_manajemen_akun.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.exception.BadRequestException;
+import my_sawit.authentication_manajemen_akun.common.exception.ForbiddenException;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.PagingResponseDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -34,7 +37,7 @@ public class AdminServiceImpl implements AdminService {
             String roleUpper = role.toUpperCase();
             if (!roleUpper.equals("BURUH") && !roleUpper.equals("MANDOR") &&
                     !roleUpper.equals("SUPIR") && !roleUpper.equals("ADMIN")) {
-                throw new IllegalArgumentException("Role invalid: " + role);
+                throw new BadRequestException("Role invalid: " + role);
             }
             role = roleUpper;
         }
@@ -65,17 +68,17 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public ApiResponse<UserResponseDTO> assignMandor(UUID buruhId, UUID mandorId) {
         User buruh = userRepository.findById(buruhId)
-                .orElseThrow(() -> new RuntimeException("Data Buruh not found"));
+                .orElseThrow(() -> new NotFoundException("Data Buruh not found"));
 
         User mandor = userRepository.findById(mandorId)
-                .orElseThrow(() -> new RuntimeException("Data Mandor not found"));
+                .orElseThrow(() -> new NotFoundException("Data Mandor not found"));
 
         if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
-            throw new IllegalArgumentException("The user who will be assigned has to have BURUH role.");
+            throw new BadRequestException("The user who will be assigned has to have BURUH role.");
         }
 
         if (mandor.getRole() == null || !"MANDOR".equalsIgnoreCase(mandor.getRole().getName())) {
-            throw new IllegalArgumentException("The boss who will be assigned has to have MANDOR role.");
+            throw new BadRequestException("The boss who will be assigned has to have MANDOR role.");
         }
 
         buruh.setMandor(mandor);
@@ -88,10 +91,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public ApiResponse<UserResponseDTO> unassignMandor(UUID buruhId) {
         User buruh = userRepository.findById(buruhId)
-                .orElseThrow(() -> new RuntimeException("Data Buruh not found"));
+                .orElseThrow(() -> new NotFoundException("Data Buruh not found"));
 
         if (buruh.getRole() == null || !"BURUH".equalsIgnoreCase(buruh.getRole().getName())) {
-            throw new IllegalArgumentException("Only users with BURUH role can be unassigned.");
+            throw new BadRequestException("Only users with BURUH role can be unassigned.");
         }
 
         buruh.setMandor(null);
@@ -104,10 +107,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public ApiResponse<Void> deleteUser(UUID targetId, String currentAdminEmail) {
         User targetUser = userRepository.findById(targetId)
-                .orElseThrow(() -> new RuntimeException("User data not found"));
+                .orElseThrow(() -> new NotFoundException("User data not found"));
 
         if (targetUser.getEmail().equalsIgnoreCase(currentAdminEmail)) {
-            throw new IllegalArgumentException("Admin can't be deleted.");
+            throw new ForbiddenException("Admin can't be deleted.");
         }
 
         List<User> buruhList = userRepository.findByMandor(targetUser);
@@ -135,7 +138,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(readOnly = true)
     public ApiResponse<UserResponseDTO> getUserDetail(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User data not found"));
+                .orElseThrow(() -> new NotFoundException("User data not found"));
 
         UserResponseDTO data = ConvertResponseHandler.convertToUserResponseDTO(user, mandorProfileRepository);
         return ApiResponse.success("Successfully fetched detail user", data);

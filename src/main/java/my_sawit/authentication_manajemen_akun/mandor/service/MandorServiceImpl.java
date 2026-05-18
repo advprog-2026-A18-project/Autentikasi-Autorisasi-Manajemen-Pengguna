@@ -1,6 +1,7 @@
 package my_sawit.authentication_manajemen_akun.mandor.service;
 
 import lombok.RequiredArgsConstructor;
+import my_sawit.authentication_manajemen_akun.common.exception.NotFoundException;
 import my_sawit.authentication_manajemen_akun.dto.request.BawahanSearchRequestDTO;
 import my_sawit.authentication_manajemen_akun.dto.response.ApiResponse;
 import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
@@ -23,7 +24,7 @@ public class MandorServiceImpl implements MandorService {
     @Transactional(readOnly = true)
     public ApiResponse<List<UserResponseDTO>> getMyBawahan(String email, BawahanSearchRequestDTO request) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new NotFoundException("Profile not found"));
 
         String searchName = (request != null) ? request.getName() : null;
 
