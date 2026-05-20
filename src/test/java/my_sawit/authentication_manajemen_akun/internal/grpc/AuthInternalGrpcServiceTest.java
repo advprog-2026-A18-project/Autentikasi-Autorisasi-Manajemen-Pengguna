@@ -1,17 +1,19 @@
 package my_sawit.authentication_manajemen_akun.internal.grpc;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
-import my_sawit.authentication_manajemen_akun.domain.model.Role;
-import my_sawit.authentication_manajemen_akun.domain.model.User;
-import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
-import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.GetUserByIdRequest;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.GetUsersByIdsRequest;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.GetUsersByIdsResponse;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.UserResponse;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.ValidateUserRoleRequest;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.ValidateUserRoleResponse;
+import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
+import my_sawit.authentication_manajemen_akun.domain.model.Role;
+import my_sawit.authentication_manajemen_akun.domain.model.User;
+import my_sawit.authentication_manajemen_akun.domain.repository.MandorProfileRepository;
+import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +27,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -121,6 +125,24 @@ class AuthInternalGrpcServiceTest {
     }
 
     @Test
+    void getUserById_WhenUserIdInvalid_ReturnsInvalidArgumentError() {
+        grpcService.getUserById(
+                GetUserByIdRequest.newBuilder()
+                        .setUserId("not-a-uuid")
+                        .build(),
+                userResponseObserver
+        );
+
+        ArgumentCaptor<Throwable> captor = ArgumentCaptor.forClass(Throwable.class);
+        verify(userResponseObserver).onError(captor.capture());
+        verify(userResponseObserver, never()).onNext(org.mockito.ArgumentMatchers.any());
+        verify(userResponseObserver, never()).onCompleted();
+
+        StatusRuntimeException error = assertInstanceOf(StatusRuntimeException.class, captor.getValue());
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
+    }
+
+    @Test
     void getUsersByIds_ReturnsOnlyFoundUsers() {
         UUID missingId = UUID.randomUUID();
         when(userRepository.findAllById(List.of(supir.getId(), missingId, mandor.getId())))
@@ -165,6 +187,7 @@ class AuthInternalGrpcServiceTest {
         assertTrue(response.getValid());
         assertEquals("MANDOR", response.getActualRole());
         assertEquals("MANDOR", response.getExpectedRole());
+        assertEquals("User role is valid", response.getMessage());
     }
 
     @Test
@@ -187,6 +210,7 @@ class AuthInternalGrpcServiceTest {
         assertFalse(response.getValid());
         assertEquals("SUPIR", response.getActualRole());
         assertEquals("MANDOR", response.getExpectedRole());
+        assertEquals("Expected role MANDOR but was SUPIR", response.getMessage());
     }
 
     @Test
@@ -210,5 +234,6 @@ class AuthInternalGrpcServiceTest {
         assertFalse(response.getValid());
         assertEquals(missingId.toString(), response.getUserId());
         assertEquals("MANDOR", response.getExpectedRole());
+        assertEquals("User not found", response.getMessage());
     }
 }
