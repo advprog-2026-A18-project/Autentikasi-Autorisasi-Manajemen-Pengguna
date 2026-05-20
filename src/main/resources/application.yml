@@ -1,6 +1,11 @@
 server:
   port: 8081
 
+grpc:
+  server:
+    enabled: ${GRPC_SERVER_ENABLED:true}
+    port: ${GRPC_PORT:9091}
+
 jwt:
   secret: ${JWT_SECRET}
   expirationMs: 600000
