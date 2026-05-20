@@ -7,8 +7,10 @@ import id.ac.ui.cs.advprog.mysawit.grpc.auth.GetUsersByIdsResponse;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.UserResponse;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.ValidateUserRoleRequest;
 import id.ac.ui.cs.advprog.mysawit.grpc.auth.ValidateUserRoleResponse;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import my_sawit.authentication_manajemen_akun.common.mapper.UserResponseMapper;
+import my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO;
 import my_sawit.authentication_manajemen_akun.domain.model.User;
 import my_sawit.authentication_manajemen_akun.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -30,15 +32,19 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
 
     @Override
     public void getUserById(GetUserByIdRequest request, StreamObserver<UserResponse> responseObserver) {
-        UUID userId = UUID.fromString(request.getUserId());
+        UUID userId;
+        try {
+            userId = parseUuid(request.getUserId(), "user_id");
+        } catch (IllegalArgumentException e) {
+            responseObserver.onError(invalidArgument(e.getMessage()));
+            return;
+        }
+
         Optional<User> user = userRepository.findById(userId);
 
         UserResponse response = user
                 .map(this::toGrpcUserResponse)
-                .orElseGet(() -> UserResponse.newBuilder()
-                        .setId(request.getUserId())
-                        .setFound(false)
-                        .build());
+                .orElseGet(() -> notFoundUserResponse(request.getUserId()));
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -49,9 +55,15 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
             GetUsersByIdsRequest request,
             StreamObserver<GetUsersByIdsResponse> responseObserver
     ) {
-        List<UUID> userIds = request.getUserIdsList().stream()
-                .map(UUID::fromString)
-                .toList();
+        List<UUID> userIds;
+        try {
+            userIds = request.getUserIdsList().stream()
+                    .map(userId -> parseUuid(userId, "user_ids"))
+                    .toList();
+        } catch (IllegalArgumentException e) {
+            responseObserver.onError(invalidArgument(e.getMessage()));
+            return;
+        }
 
         GetUsersByIdsResponse response = GetUsersByIdsResponse.newBuilder()
                 .addAllUsers(userRepository.findAllById(userIds).stream()
@@ -68,7 +80,15 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
             ValidateUserRoleRequest request,
             StreamObserver<ValidateUserRoleResponse> responseObserver
     ) {
-        Optional<User> user = userRepository.findById(UUID.fromString(request.getUserId()));
+        UUID userId;
+        try {
+            userId = parseUuid(request.getUserId(), "user_id");
+        } catch (IllegalArgumentException e) {
+            responseObserver.onError(invalidArgument(e.getMessage()));
+            return;
+        }
+
+        Optional<User> user = userRepository.findById(userId);
         String actualRole = user
                 .map(this::getRoleName)
                 .orElse("");
@@ -79,7 +99,7 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
                 .setUserId(request.getUserId())
                 .setActualRole(actualRole)
                 .setExpectedRole(request.getExpectedRole())
-                .setMessage(valid ? "User role is valid" : "User role is invalid")
+                .setMessage(buildRoleValidationMessage(user.isPresent(), valid, request.getExpectedRole(), actualRole))
                 .build();
 
         responseObserver.onNext(response);
@@ -87,10 +107,9 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
     }
 
     private UserResponse toGrpcUserResponse(User user) {
-        my_sawit.authentication_manajemen_akun.dto.response.UserResponseDTO dto =
-                userResponseMapper.toDto(user);
+        UserResponseDTO dto = userResponseMapper.toDto(user);
 
-        UserResponse.Builder builder = UserResponse.newBuilder()
+        return UserResponse.newBuilder()
                 .setId(toStringOrEmpty(dto.getId()))
                 .setUsername(toStringOrEmpty(dto.getUsername()))
                 .setFullname(toStringOrEmpty(dto.getFullname()))
@@ -98,9 +117,44 @@ public class AuthInternalGrpcService extends AuthInternalServiceGrpc.AuthInterna
                 .setRole(toStringOrEmpty(dto.getRole()))
                 .setNomorSertifikasi(toStringOrEmpty(dto.getNomorSertifikasi()))
                 .setNamaMandor(toStringOrEmpty(dto.getNamaMandor()))
-                .setFound(true);
+                .setFound(true)
+                .build();
+    }
 
-        return builder.build();
+    private UserResponse notFoundUserResponse(String userId) {
+        return UserResponse.newBuilder()
+                .setId(toStringOrEmpty(userId))
+                .setFound(false)
+                .build();
+    }
+
+    private UUID parseUuid(String rawValue, String fieldName) {
+        try {
+            return UUID.fromString(rawValue);
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(fieldName + " must be a valid UUID", e);
+        }
+    }
+
+    private RuntimeException invalidArgument(String message) {
+        return Status.INVALID_ARGUMENT
+                .withDescription(message)
+                .asRuntimeException();
+    }
+
+    private String buildRoleValidationMessage(
+            boolean userFound,
+            boolean valid,
+            String expectedRole,
+            String actualRole
+    ) {
+        if (!userFound) {
+            return "User not found";
+        }
+        if (valid) {
+            return "User role is valid";
+        }
+        return "Expected role " + expectedRole + " but was " + actualRole;
     }
 
     private String getRoleName(User user) {
