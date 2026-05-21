@@ -168,6 +168,25 @@ class AuthInternalGrpcServiceTest {
     }
 
     @Test
+    void getUsersByIds_WhenAnyUserIdInvalid_ReturnsInvalidArgumentError() {
+        grpcService.getUsersByIds(
+                GetUsersByIdsRequest.newBuilder()
+                        .addUserIds(supir.getId().toString())
+                        .addUserIds("not-a-uuid")
+                        .build(),
+                usersResponseObserver
+        );
+
+        ArgumentCaptor<Throwable> captor = ArgumentCaptor.forClass(Throwable.class);
+        verify(usersResponseObserver).onError(captor.capture());
+        verify(usersResponseObserver, never()).onNext(org.mockito.ArgumentMatchers.any());
+        verify(usersResponseObserver, never()).onCompleted();
+
+        StatusRuntimeException error = assertInstanceOf(StatusRuntimeException.class, captor.getValue());
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
+    }
+
+    @Test
     void validateUserRole_WhenRoleMatches_ReturnsValid() {
         when(userRepository.findById(mandor.getId())).thenReturn(Optional.of(mandor));
 
@@ -214,6 +233,64 @@ class AuthInternalGrpcServiceTest {
     }
 
     @Test
+    void validateUserRole_WhenUserHasNoRole_ReturnsInvalidWithEmptyActualRole() {
+        User userWithoutRole = User.builder()
+                .id(UUID.randomUUID())
+                .username("no_role")
+                .fullname("No Role")
+                .email("norole@sawit.com")
+                .role(null)
+                .build();
+        when(userRepository.findById(userWithoutRole.getId())).thenReturn(Optional.of(userWithoutRole));
+
+        grpcService.validateUserRole(
+                ValidateUserRoleRequest.newBuilder()
+                        .setUserId(userWithoutRole.getId().toString())
+                        .setExpectedRole("MANDOR")
+                        .build(),
+                validateRoleObserver
+        );
+
+        ArgumentCaptor<ValidateUserRoleResponse> captor = ArgumentCaptor.forClass(ValidateUserRoleResponse.class);
+        verify(validateRoleObserver).onNext(captor.capture());
+        verify(validateRoleObserver).onCompleted();
+
+        ValidateUserRoleResponse response = captor.getValue();
+        assertFalse(response.getValid());
+        assertEquals("", response.getActualRole());
+        assertEquals("Expected role MANDOR but was ", response.getMessage());
+    }
+
+    @Test
+    void validateUserRole_WhenUserRoleNameIsNull_ReturnsInvalidWithEmptyActualRole() {
+        User userWithUnnamedRole = User.builder()
+                .id(UUID.randomUUID())
+                .username("unnamed_role")
+                .fullname("Unnamed Role")
+                .email("unnamedrole@sawit.com")
+                .role(Role.builder().name(null).build())
+                .build();
+        when(userRepository.findById(userWithUnnamedRole.getId())).thenReturn(Optional.of(userWithUnnamedRole));
+
+        grpcService.validateUserRole(
+                ValidateUserRoleRequest.newBuilder()
+                        .setUserId(userWithUnnamedRole.getId().toString())
+                        .setExpectedRole("MANDOR")
+                        .build(),
+                validateRoleObserver
+        );
+
+        ArgumentCaptor<ValidateUserRoleResponse> captor = ArgumentCaptor.forClass(ValidateUserRoleResponse.class);
+        verify(validateRoleObserver).onNext(captor.capture());
+        verify(validateRoleObserver).onCompleted();
+
+        ValidateUserRoleResponse response = captor.getValue();
+        assertFalse(response.getValid());
+        assertEquals("", response.getActualRole());
+        assertEquals("Expected role MANDOR but was ", response.getMessage());
+    }
+
+    @Test
     void validateUserRole_WhenUserDoesNotExist_ReturnsInvalid() {
         UUID missingId = UUID.randomUUID();
         when(userRepository.findById(missingId)).thenReturn(Optional.empty());
@@ -235,5 +312,24 @@ class AuthInternalGrpcServiceTest {
         assertEquals(missingId.toString(), response.getUserId());
         assertEquals("MANDOR", response.getExpectedRole());
         assertEquals("User not found", response.getMessage());
+    }
+
+    @Test
+    void validateUserRole_WhenUserIdInvalid_ReturnsInvalidArgumentError() {
+        grpcService.validateUserRole(
+                ValidateUserRoleRequest.newBuilder()
+                        .setUserId("not-a-uuid")
+                        .setExpectedRole("MANDOR")
+                        .build(),
+                validateRoleObserver
+        );
+
+        ArgumentCaptor<Throwable> captor = ArgumentCaptor.forClass(Throwable.class);
+        verify(validateRoleObserver).onError(captor.capture());
+        verify(validateRoleObserver, never()).onNext(org.mockito.ArgumentMatchers.any());
+        verify(validateRoleObserver, never()).onCompleted();
+
+        StatusRuntimeException error = assertInstanceOf(StatusRuntimeException.class, captor.getValue());
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
     }
 }
