@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package mysawit.auth.v1;
+
+option java_multiple_files = true;
+option java_package = "id.ac.ui.cs.advprog.mysawit.grpc.auth";
+option java_outer_classname = "AuthInternalProto";
+
+service AuthInternalService {
+  rpc GetUserById(GetUserByIdRequest) returns (UserResponse);
+  rpc GetUsersByIds(GetUsersByIdsRequest) returns (GetUsersByIdsResponse);
+  rpc ValidateUserRole(ValidateUserRoleRequest) returns (ValidateUserRoleResponse);
+}
+
+message GetUserByIdRequest {
+  string user_id = 1;
+}
+
+message GetUsersByIdsRequest {
+  repeated string user_ids = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string username = 2;
+  string fullname = 3;
+  string email = 4;
+  string role = 5;
+  string nomor_sertifikasi = 6;
+  string nama_mandor = 7;
+  bool found = 8;
+}
+
+message GetUsersByIdsResponse {
+  repeated UserResponse users = 1;
+}
+
+message ValidateUserRoleRequest {
+  string user_id = 1;
+  string expected_role = 2;
+}
+
+message ValidateUserRoleResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string actual_role = 3;
+  string expected_role = 4;
+  string message = 5;
+}

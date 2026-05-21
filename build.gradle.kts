@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.sonarqube") version "7.2.0.6526"
+    id("com.google.protobuf") version "0.9.5"
     jacoco
 }
 
@@ -38,6 +39,9 @@ repositories {
 val jjwtVersion = "0.12.6"
 val dotenvVersion = "4.0.0"
 val googleApiClientVersion = "2.4.1"
+val grpcVersion = "1.73.0"
+val protobufVersion = "4.31.1"
+val annotations_api = "6.0.53"
 
 dependencyLocking {
     lockAllConfigurations()
@@ -52,9 +56,14 @@ dependencies {
     implementation("me.paulschwarz:spring-dotenv:$dotenvVersion")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
     implementation("com.google.api-client:google-api-client:$googleApiClientVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
 
     // --- COMPILE ONLY & ANNOTATION PROCESSOR ---
     compileOnly("org.projectlombok:lombok")
+    compileOnly("org.apache.tomcat:annotations-api:$annotations_api")
     annotationProcessor("org.projectlombok:lombok")
 
     // --- RUNTIME ONLY ---
@@ -93,4 +102,22 @@ tasks.jacocoTestReport {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                create("grpc")
+            }
+        }
+    }
 }
