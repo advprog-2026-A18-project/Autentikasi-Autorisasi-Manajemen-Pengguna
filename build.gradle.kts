@@ -41,6 +41,7 @@ val dotenvVersion = "4.0.0"
 val googleApiClientVersion = "2.4.1"
 val grpcVersion = "1.73.0"
 val protobufVersion = "4.31.1"
+val annotations_api = "6.0.53"
 
 dependencyLocking {
     lockAllConfigurations()
@@ -62,7 +63,7 @@ dependencies {
 
     // --- COMPILE ONLY & ANNOTATION PROCESSOR ---
     compileOnly("org.projectlombok:lombok")
-    compileOnly("org.apache.tomcat:annotations-api:6.0.53")
+    compileOnly("org.apache.tomcat:annotations-api:$annotations_api")
     annotationProcessor("org.projectlombok:lombok")
 
     // --- RUNTIME ONLY ---
