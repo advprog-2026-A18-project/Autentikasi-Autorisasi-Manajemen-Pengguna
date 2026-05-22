@@ -42,6 +42,7 @@ val googleApiClientVersion = "2.4.1"
 val grpcVersion = "1.73.0"
 val protobufVersion = "4.31.1"
 val annotations_api = "6.0.53"
+val serenityVersion = "4.2.34"
 
 dependencyLocking {
     lockAllConfigurations()
@@ -79,9 +80,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("net.serenity-bdd:serenity-junit5:$serenityVersion")
+    testImplementation("net.serenity-bdd:serenity-rest-assured:$serenityVersion")
 
     // --- TEST RUNTIME ONLY ---
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("com.h2database:h2")
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
@@ -92,6 +96,19 @@ tasks.test {
         excludeTestsMatching("*FunctionalTest")
     }
     finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.register<Test>("functionalTest") {
+    description = "Runs Serenity functional tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching("*FunctionalTest")
+    }
+    shouldRunAfter(tasks.test)
+    systemProperty("serenity.outputDirectory", layout.buildDirectory.dir("reports/serenity").get().asFile.absolutePath)
 }
 
 tasks.jacocoTestReport {
