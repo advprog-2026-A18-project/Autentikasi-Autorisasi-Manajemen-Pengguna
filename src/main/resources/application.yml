@@ -25,6 +25,12 @@ app:
     fullname: ${ADMIN_FULLNAME}
   google:
     clientId: ${GOOGLE_CLIENT_ID}
+  profiling-seeder:
+    enabled: false
+    mandor-count: 20
+    buruh-count: 200
+    supir-count: 50
+    google-user-count: 10
 
 management:
   endpoints:
